@@ -1,6 +1,6 @@
 # EZ Tile Map Editor
 
-A Godot 4.6 plugin that makes terrain painting on TileMapLayer nodes intuitive and easy — pick a terrain and paint directly in the viewport, replacing the less user-friendly native TileSet bottom panel workflow.
+A Godot 4.6 plugin that makes terrain painting on TileMapLayer nodes intuitive and easy - pick a terrain, pick a tool, and paint directly in the viewport. Replaces the less user-friendly native TileSet bottom panel workflow with a focused, always-visible toolbar and terrain grid.
 
 Plugin entry: `addons/ez_tile_map_editor/plugin.cfg`
 Editor plugin: `addons/ez_tile_map_editor/ez_tile_map_editor_plugin.gd`
