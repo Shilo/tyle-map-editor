@@ -60,6 +60,7 @@ var undo_manager: EditorUndoRedoManager
 var flattened_terrains: Array[Dictionary] = []  # [{set, idx, name, color, icon_texture, icon_region}]
 var selected_index: int = -1             # -1 = erase
 var paint_tool: PaintTool = PaintTool.DRAW
+var _prev_tool: PaintTool = PaintTool.DRAW
 
 var draw_overlay: bool = false
 var mouse_down: bool = false
@@ -120,6 +121,7 @@ func _process(_delta: float) -> void:
 
 
 func _on_tool_changed(tool: PaintTool) -> void:
+	_prev_tool = paint_tool
 	paint_tool = tool
 	pick_button.button_pressed = false
 
@@ -337,6 +339,7 @@ func canvas_input(event: InputEvent) -> bool:
 		mouse_down = false
 		if paint_tool == PaintTool.LINE or paint_tool == PaintTool.RECT:
 			_commit_paint_action()
+		drag_erasing = false
 		draw_overlay = false
 		update_overlay.emit()
 		return true
@@ -356,8 +359,7 @@ func canvas_input(event: InputEvent) -> bool:
 		if paint_tool == PaintTool.PICK and event.button_index == MOUSE_BUTTON_LEFT:
 			_pick_at_mouse()
 			pick_button.button_pressed = false
-			paint_tool = PaintTool.DRAW
-			draw_button.button_pressed = true
+			paint_tool = _prev_tool
 			return true
 
 		mouse_down = true
@@ -582,7 +584,9 @@ func canvas_draw(overlay: Control) -> void:
 				return
 
 	var color: Color
-	if paint_tool == PaintTool.ERASE or drag_erasing or selected_index < 0 or erase_button.button_pressed:
+	if mouse_down and drag_erasing:
+		color = Color(0.0, 0.0, 0.0, 0.35)
+	elif erase_button.button_pressed or selected_index < 0:
 		color = Color(0.0, 0.0, 0.0, 0.35)
 	else:
 		color = Color(1.0, 1.0, 1.0, 0.35)
