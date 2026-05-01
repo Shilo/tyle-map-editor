@@ -30,7 +30,6 @@ enum PaintTool { NONE, DRAW, LINE, RECT, BUCKET, PICK, ERASE }
 
 var tilemap: TileMapLayer = null:
 	set(v):
-		print("[EZ] tilemap setter: old=", tilemap, " new=", v)
 		tilemap = v
 		tileset = v.tile_set if v else null
 		_update_layer_dropdown.call_deferred()
@@ -38,7 +37,6 @@ var tilemap: TileMapLayer = null:
 
 var tileset: TileSet = null:
 	set(v):
-		print("[EZ] tileset setter: old=", tileset, " new=", v)
 		if tileset and tileset.changed.is_connected(_on_tileset_changed):
 			tileset.changed.disconnect(_on_tileset_changed)
 		tileset = v
@@ -158,11 +156,8 @@ func _refresh_terrains() -> void:
 		_create_terrain_entry(flattened_terrains[i], i)
 	if selected_index == -1 and flattened_terrains.size() > 0:
 		selected_index = 0
-		print("[EZ] _refresh_terrains: auto-selected index 0")
 	if selected_index >= flattened_terrains.size():
 		selected_index = -1
-		print("[EZ] _refresh_terrains: reset selected_index (out of range)")
-	print("[EZ] _refresh_terrains: selected_index=", selected_index, " child_count=", terrain_grid.get_child_count())
 	_update_management_buttons()
 	_update_selection_buttons()
 	_update_erase_buttons.call_deferred()
@@ -245,7 +240,6 @@ func _create_terrain_entry(data: Dictionary, index: int) -> void:
 
 func _on_entry_gui_input(event: InputEvent, panel: PanelContainer, index: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		print("[EZ] entry clicked: index=", index)
 		selected_index = index
 		_update_selection_buttons()
 
@@ -275,11 +269,9 @@ func _update_entry_style(panel: PanelContainer, selected: bool) -> void:
 
 
 func _update_selection_buttons() -> void:
-	print("[EZ] _update_selection_buttons: children=", terrain_grid.get_child_count(), " selected_index=", selected_index)
 	for i in terrain_grid.get_child_count():
 		var panel := terrain_grid.get_child(i) as PanelContainer
 		if not panel:
-			print("  [", i, "] NOT PanelContainer: ", terrain_grid.get_child(i).get_class())
 			continue
 		_update_entry_style(panel, i == selected_index)
 	_update_management_buttons()
@@ -367,7 +359,6 @@ func _on_layer_grid_toggled(toggled: bool) -> void:
 
 
 func about_to_be_visible() -> void:
-	print("[EZ] about_to_be_visible: tilemap=", tilemap, " tileset=", tileset)
 	if tilemap and tileset != tilemap.tile_set:
 		tileset = tilemap.tile_set
 	var settings := EditorInterface.get_editor_settings()
