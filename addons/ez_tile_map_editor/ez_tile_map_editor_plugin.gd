@@ -39,6 +39,8 @@ func _handles(object: Object) -> bool:
 func _edit(object: Object) -> void:
 	if object is TileMapLayer:
 		_panel.tilemap = object
+		if _button and _button.button_pressed:
+			_re_show.call_deferred()
 
 
 func _make_visible(visible: bool) -> void:
@@ -46,13 +48,19 @@ func _make_visible(visible: bool) -> void:
 		_button.visible = true
 		_button.button_pressed = true
 		make_bottom_panel_item_visible(_panel)
-		_ensure_visible_deferred.call_deferred()
+		_re_show.call_deferred()
 	elif _button:
 		_button.visible = false
 		_button.button_pressed = false
 
 
-func _ensure_visible_deferred() -> void:
+func _re_show() -> void:
+	if _button and _button.button_pressed:
+		make_bottom_panel_item_visible(_panel)
+		_re_show2.call_deferred()
+
+
+func _re_show2() -> void:
 	if _button and _button.button_pressed:
 		make_bottom_panel_item_visible(_panel)
 

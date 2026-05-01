@@ -65,6 +65,7 @@ var paint_tool: PaintTool = PaintTool.DRAW
 var replace_mode: bool = false
 
 var draw_overlay: bool = false
+var mouse_down: bool = false
 var mouse_start: Vector2i = Vector2i.ZERO
 var mouse_current: Vector2i = Vector2i.ZERO
 var mouse_prev: Vector2i = Vector2i.ZERO
@@ -135,6 +136,9 @@ func _on_tileset_changed() -> void:
 
 # ---- TERRAIN READING & GRID ----
 
+var _icon_cache: Dictionary = {}
+
+
 func _refresh_terrains() -> void:
 	for c in terrain_grid.get_children():
 		c.queue_free()
@@ -145,12 +149,15 @@ func _refresh_terrains() -> void:
 		_show_empty(true)
 		return
 
+	_build_icon_cache()
+
 	var terrain_count := 0
 	for set_idx in tileset.get_terrain_sets_count():
 		for ter_idx in tileset.get_terrains_count(set_idx):
 			var name := tileset.get_terrain_name(set_idx, ter_idx)
 			var color := tileset.get_terrain_color(set_idx, ter_idx)
-			var icon := _discover_terrain_icon(set_idx, ter_idx)
+			var key := "%d:%d" % [set_idx, ter_idx]
+			var icon: Dictionary = _icon_cache.get(key, {})
 			flattened_terrains.append({
 				set = set_idx,
 				idx = ter_idx,
@@ -183,32 +190,87 @@ func _show_empty(show: bool) -> void:
 	scroll_container.visible = not show
 
 
-func _discover_terrain_icon(set_idx: int, ter_idx: int) -> Dictionary:
+func _build_icon_cache() -> void:
+	_icon_cache.clear()
+	if not tileset:
+		return
 	for src_i in tileset.get_source_count():
-		var src_id := tileset.get_source_id(src_i)
-		var source := tileset.get_source(src_id) as TileSetAtlasSource
-		if not source:
+		var source := tileset.get_source(tileset.get_source_id(src_i)) as TileSetAtlasSource
+		if not source or not source.texture:
 			continue
 		for tile_i in source.get_tiles_count():
 			var coord := source.get_tile_id(tile_i)
 			for alt_i in source.get_alternative_tiles_count(coord):
 				var alt_id := source.get_alternative_tile_id(coord, alt_i)
 				var td: TileData = source.get_tile_data(coord, alt_id)
-				if td.terrain_set == set_idx and td.terrain == ter_idx:
-					return _make_icon(source, coord, alt_id)
-				for peering in range(16):
-					if td.get_terrain_peering_bit(peering) == ter_idx and td.terrain_set == set_idx:
-						return _make_icon(source, coord, alt_id)
-	return {}
+				_cache_terrain_icon(td, source, coord, alt_id)
+
+
+const _VALID_PEERING_BITS := {
+	TileSet.TILE_SHAPE_SQUARE: {
+		TileSet.TERRAIN_MODE_MATCH_CORNERS_AND_SIDES: [0, 3, 4, 7, 8, 11, 12, 15],
+		TileSet.TERRAIN_MODE_MATCH_CORNERS: [3, 7, 11, 15],
+		TileSet.TERRAIN_MODE_MATCH_SIDES: [0, 4, 8, 12],
+	},
+	TileSet.TILE_SHAPE_ISOMETRIC: {
+		TileSet.TERRAIN_MODE_MATCH_CORNERS_AND_SIDES: [1, 2, 5, 6, 9, 10, 13, 14],
+		TileSet.TERRAIN_MODE_MATCH_CORNERS: [1, 5, 9, 13],
+		TileSet.TERRAIN_MODE_MATCH_SIDES: [2, 6, 10, 14],
+	},
+	TileSet.TILE_SHAPE_HALF_OFFSET_SQUARE: {
+		TileSet.TERRAIN_MODE_MATCH_CORNERS_AND_SIDES: [0, 2, 6, 8, 10, 14],
+		TileSet.TERRAIN_MODE_MATCH_CORNERS: [3, 5, 7, 11, 13, 15],
+		TileSet.TERRAIN_MODE_MATCH_SIDES: [0, 2, 6, 8, 10, 14],
+	},
+	TileSet.TILE_SHAPE_HEXAGON: {
+		TileSet.TERRAIN_MODE_MATCH_CORNERS_AND_SIDES: [2, 4, 6, 10, 12, 14],
+		TileSet.TERRAIN_MODE_MATCH_CORNERS: [1, 3, 7, 9, 11, 15],
+		TileSet.TERRAIN_MODE_MATCH_SIDES: [2, 4, 6, 10, 12, 14],
+	},
+}
+
+
+func _valid_peering_bits_for_set(set_idx: int) -> Array:
+	if not tileset or set_idx < 0:
+		return []
+	var shape := tileset.tile_shape
+	var mode := tileset.get_terrain_set_mode(set_idx)
+	if shape in _VALID_PEERING_BITS:
+		var modes: Dictionary = _VALID_PEERING_BITS[shape]
+		if mode in modes:
+			return modes[mode]
+	return [0, 3, 4, 7, 8, 11, 12, 15]
+
+
+func _cache_terrain_icon(td: TileData, source: TileSetAtlasSource, coord: Vector2i, alt_id: int) -> void:
+	var set_idx := td.terrain_set
+	if set_idx < 0:
+		return
+	var key_center := "%d:%d" % [set_idx, td.terrain]
+	if td.terrain >= 0 and not _icon_cache.has(key_center):
+		_icon_cache[key_center] = _make_icon(source, coord, alt_id)
+	for peering in _valid_peering_bits_for_set(set_idx):
+		var ter := td.get_terrain_peering_bit(peering)
+		if ter >= 0:
+			var key_peer := "%d:%d" % [set_idx, ter]
+			if not _icon_cache.has(key_peer):
+				_icon_cache[key_peer] = _make_icon(source, coord, alt_id)
+
+
+func _discover_terrain_icon(set_idx: int, ter_idx: int) -> Dictionary:
+	return _icon_cache.get("%d:%d" % [set_idx, ter_idx], {})
 
 
 func _make_icon(source: TileSetAtlasSource, coord: Vector2i, alt_id: int) -> Dictionary:
+	if not source or not source.texture:
+		return {}
 	var atlas_tex := AtlasTexture.new()
 	atlas_tex.atlas = source.texture
-	atlas_tex.region = source.get_tile_texture_region(coord, alt_id)
+	var region := source.get_tile_texture_region(coord, 0)
+	atlas_tex.region = region
 	return {
 		texture = atlas_tex,
-		region = source.get_tile_texture_region(coord, alt_id)
+		region = region
 	}
 
 
@@ -280,7 +342,6 @@ func _on_grid_mode_toggled() -> void:
 
 
 func _on_quick_mode_toggled() -> void:
-	_update_management_buttons()
 	add_terrain_button.visible = not quick_mode_button.button_pressed
 	edit_terrain_button.visible = not quick_mode_button.button_pressed
 	move_up_button.visible = not quick_mode_button.button_pressed
@@ -290,7 +351,7 @@ func _on_quick_mode_toggled() -> void:
 
 # ---- SAVE / RESTORE CELL STATE ----
 
-func _save_cells(coords: Array[Vector2i]) -> Dictionary:
+func _save_cells(coords: Array) -> Dictionary:
 	var state := {}
 	for c in coords:
 		var src := tilemap.get_cell_source_id(c)
@@ -318,42 +379,47 @@ func canvas_input(event: InputEvent) -> bool:
 	if not tilemap or not tileset:
 		return false
 
-	if event is InputEventMouse:
-		var transform := _canvas_tilemap_transform()
-		var pos: Vector2 = transform.affine_inverse() * event.position
-		mouse_prev = mouse_current
-		mouse_current = tilemap.local_to_map(pos)
-	else:
+	if not event is InputEventMouse:
 		return false
+
+	var transform := _canvas_tilemap_transform()
+	var pos: Vector2 = transform.affine_inverse() * event.position
+	mouse_prev = mouse_current
+	mouse_current = tilemap.local_to_map(pos)
 
 	if event is InputEventMouseMotion:
 		if mouse_current == mouse_prev:
 			return false
-		draw_overlay = true
-		update_overlay.emit()
+		if mouse_down:
+			draw_overlay = true
+			update_overlay.emit()
+			if paint_tool == PaintTool.DRAW:
+				_do_paint_stroke()
 
 	var released: bool = event is InputEventMouseButton and not event.pressed
 	var clicked: bool = event is InputEventMouseButton and event.pressed
 
 	if released:
-		_commit_paint_action()
+		mouse_down = false
+		if paint_tool == PaintTool.LINE or paint_tool == PaintTool.RECT:
+			_commit_paint_action()
 		draw_overlay = false
 		update_overlay.emit()
 		return true
 
 	if clicked:
-		if event is InputEventMouseButton:
-			if event.button_index == MOUSE_BUTTON_RIGHT:
-				drag_erasing = true
-			elif event.button_index == MOUSE_BUTTON_LEFT:
-				drag_erasing = erase_button.button_pressed
-			else:
-				return false
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			drag_erasing = true
+		elif event.button_index == MOUSE_BUTTON_LEFT:
+			drag_erasing = erase_button.button_pressed
+		else:
+			return false
 
 		if event.is_command_or_control_pressed() and not event.shift_pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			_pick_at_mouse()
 			return true
 
+		mouse_down = true
 		mouse_start = mouse_current
 		draw_overlay = true
 		drag_action_index += 1
@@ -361,16 +427,13 @@ func canvas_input(event: InputEvent) -> bool:
 
 		if paint_tool == PaintTool.BUCKET:
 			_do_bucket_fill(drag_erasing)
+			mouse_down = false
 			draw_overlay = false
 			update_overlay.emit()
 		else:
 			_do_paint_stroke()
 
 		return true
-
-	if event is InputEventMouseMotion and paint_tool != PaintTool.NONE:
-		if paint_tool == PaintTool.DRAW:
-			_do_paint_stroke()
 
 	return false
 
@@ -445,7 +508,7 @@ func _get_stroke_cells() -> Array[Vector2i]:
 	return []
 
 
-func _expand_cells(cells: Array[Vector2i]) -> Array[Vector2i]:
+func _expand_cells(cells: Array[Vector2i]) -> Array:
 	var all := {}
 	for c in cells:
 		all[c] = true
@@ -498,7 +561,7 @@ func _do_bucket_fill(erasing: bool) -> void:
 	undo_manager.commit_action()
 
 
-func _flood_fill(start: Vector2i) -> Array[Vector2i]:
+func _flood_fill(start: Vector2i) -> Array:
 	var target_src := tilemap.get_cell_source_id(start)
 	var bounds := tilemap.get_used_rect()
 	bounds = bounds.grow(1)
@@ -566,7 +629,7 @@ func _get_selected_terrain() -> Dictionary:
 # ---- CANVAS OVERLAY ----
 
 func canvas_draw(overlay: Control) -> void:
-	if not draw_overlay or not tilemap:
+	if not draw_overlay or not mouse_down or not tilemap:
 		return
 
 	var t := _get_selected_terrain()
@@ -581,8 +644,8 @@ func canvas_draw(overlay: Control) -> void:
 
 	var transform := _canvas_tilemap_transform()
 	var cell_size := tileset.tile_size
-	var half := Vector2(cell_size) / 2.0
-	var polygon := PackedVector2Array([-half, Vector2(half.x, -half.y), half, Vector2(-half.x, half.y)])
+	const HALF := 0.5
+	var polygon := PackedVector2Array([Vector2(-HALF, -HALF), Vector2(HALF, -HALF), Vector2(HALF, HALF), Vector2(-HALF, HALF)])
 
 	for c in cells:
 		var cell_transform := Transform2D(0.0, cell_size, 0.0, tilemap.map_to_local(c))
@@ -804,28 +867,29 @@ func _on_move_terrain(down: bool) -> void:
 
 # ---- LAYER CONTROLS ----
 
-func _find_builtin_button_by_icon(icon: Texture2D) -> Button:
+func _find_builtin_button_by_icon(our_icon: Texture2D, fallback_name: String) -> Button:
 	var base := EditorInterface.get_base_control()
 	if not base:
 		return null
 	var editors := base.find_children("*", "TileMapLayerEditor", true, false)
 	if editors.is_empty():
 		return null
+	var fresh_icon := get_theme_icon(fallback_name, "EditorIcons")
 	var buttons := editors[0].find_children("*", "Button", true, false)
 	for btn: Button in buttons:
-		if btn.icon == icon:
+		if btn.icon == fresh_icon or btn.icon == our_icon:
 			return btn
 	return null
 
 
 func _on_layer_up() -> void:
-	var btn := _find_builtin_button_by_icon(layer_up.icon)
+	var btn := _find_builtin_button_by_icon(layer_up.icon, "MoveUp")
 	if btn:
 		btn.pressed.emit()
 
 
 func _on_layer_down() -> void:
-	var btn := _find_builtin_button_by_icon(layer_down.icon)
+	var btn := _find_builtin_button_by_icon(layer_down.icon, "MoveDown")
 	if btn:
 		btn.pressed.emit()
 
@@ -833,7 +897,8 @@ func _on_layer_down() -> void:
 func _on_layer_highlight_toggled(toggled: bool) -> void:
 	var settings := EditorInterface.get_editor_settings()
 	settings.set_setting("editors/tiles_editor/highlight_selected_layer", toggled)
-	var btn := _find_builtin_button_by_icon(layer_highlight.icon)
+	settings.emit_changed()
+	var btn := _find_builtin_button_by_icon(layer_highlight.icon, "TileMapHighlightSelected")
 	if btn:
 		btn.toggled.emit(toggled)
 
@@ -841,7 +906,8 @@ func _on_layer_highlight_toggled(toggled: bool) -> void:
 func _on_layer_grid_toggled(toggled: bool) -> void:
 	var settings := EditorInterface.get_editor_settings()
 	settings.set_setting("editors/tiles_editor/display_grid", toggled)
-	var btn := _find_builtin_button_by_icon(layer_grid.icon)
+	settings.emit_changed()
+	var btn := _find_builtin_button_by_icon(layer_grid.icon, "Grid")
 	if btn:
 		btn.toggled.emit(toggled)
 

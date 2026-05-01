@@ -155,7 +155,7 @@ flat = true
 [node name="QuickMode" type="Button" parent="VBoxContainer/LowerToolbar"]
 unique_name_in_owner = true
 layout_mode = 2
-tooltip_text = "Toggle quick mode"
+tooltip_text = "Toggle compact mode (hide management buttons)"
 toggle_mode = true
 flat = true
 
