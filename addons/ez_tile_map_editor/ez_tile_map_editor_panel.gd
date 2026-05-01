@@ -382,6 +382,10 @@ func canvas_input(event: InputEvent) -> bool:
 	if not event is InputEventMouse:
 		return false
 
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN or event.button_index == MOUSE_BUTTON_WHEEL_LEFT or event.button_index == MOUSE_BUTTON_WHEEL_RIGHT:
+			return false
+
 	var transform := _canvas_tilemap_transform()
 	var pos: Vector2 = transform.affine_inverse() * event.position
 	mouse_prev = mouse_current
