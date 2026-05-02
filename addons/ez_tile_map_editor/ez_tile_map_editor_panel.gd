@@ -786,6 +786,8 @@ func canvas_draw(overlay: Control) -> void:
 		if _drag_type == DragType.SELECT and mouse_down:
 			var sel := Rect2i(mouse_start, mouse_current - mouse_start).abs()
 			sel.size += Vector2i(1, 1)
+			if not _selection.is_empty() and (Input.is_key_pressed(KEY_SHIFT) or Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_META)):
+				_draw_cells_outline(_selection, Color(0.3, 0.7, 1.0, 0.5), overlay)
 			if sel.has_area():
 				_draw_cells_filled(sel, Color(0.2, 0.6, 1.0, 0.3), overlay)
 				var to_draw: Dictionary = {}
@@ -795,8 +797,6 @@ func canvas_draw(overlay: Control) -> void:
 						if tilemap.get_cell_source_id(c) != -1:
 							to_draw[c] = true
 				_draw_cells_outline(to_draw, Color(0.3, 0.7, 1.0, 1.0), overlay)
-			if not _selection.is_empty() and (Input.is_key_pressed(KEY_SHIFT) or Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_META)):
-				_draw_cells_outline(_selection, Color(0.3, 0.7, 1.0, 0.5), overlay)
 		elif _drag_type == DragType.MOVE and mouse_down:
 			_draw_move_preview(mouse_current - mouse_start, overlay)
 		elif not _selection.is_empty():
@@ -1070,6 +1070,17 @@ func _await_dialog(dialog: AcceptDialog) -> bool:
 	await dialog.visibility_changed
 	return confirmed
 
+func _arrays_equal(a: Array, b: Array) -> bool:
+	if a.size() != b.size():
+		return false
+	var check := {}
+	for v in a:
+		check[v] = true
+	for v in b:
+		if not check.has(v):
+			return false
+	return true
+
 func _is_editor_select_mode() -> bool:
 	if not Engine.is_editor_hint():
 		return true
@@ -1171,18 +1182,6 @@ func _commit_selection() -> void:
 	var rect := Rect2i(mouse_start, mouse_current - mouse_start).abs()
 	var ctrl_or_cmd := Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_META)
 	var old_selection := _selection.keys()
-	if not undo_manager:
-		if not Input.is_key_pressed(KEY_SHIFT) and not ctrl_or_cmd:
-			_selection.clear()
-		for x in range(rect.position.x, rect.position.x + rect.size.x + 1):
-			for y in range(rect.position.y, rect.position.y + rect.size.y + 1):
-				var c := Vector2i(x, y)
-				if ctrl_or_cmd:
-					_selection.erase(c)
-				elif tilemap.get_cell_source_id(c) != -1:
-					_selection[c] = true
-		_drag_type = DragType.NONE
-		return
 	if not Input.is_key_pressed(KEY_SHIFT) and not ctrl_or_cmd:
 		_selection.clear()
 	for x in range(rect.position.x, rect.position.x + rect.size.x + 1):
@@ -1192,10 +1191,11 @@ func _commit_selection() -> void:
 				_selection.erase(c)
 			elif tilemap.get_cell_source_id(c) != -1:
 				_selection[c] = true
-	undo_manager.create_action("Change Selection", UndoRedo.MERGE_DISABLE, tilemap)
-	undo_manager.add_undo_method(self, "_set_selection", old_selection)
-	undo_manager.add_do_method(self, "_set_selection", _selection.keys())
-	undo_manager.commit_action()
+	if undo_manager and not _arrays_equal(old_selection, _selection.keys()):
+		undo_manager.create_action("Change Selection", UndoRedo.MERGE_DISABLE, tilemap)
+		undo_manager.add_undo_method(self, "_set_selection", old_selection)
+		undo_manager.add_do_method(self, "_set_selection", _selection.keys())
+		undo_manager.commit_action()
 	_drag_type = DragType.NONE
 
 func _start_move(mouse_pos: Vector2i) -> void:
