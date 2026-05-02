@@ -100,13 +100,14 @@ func _ready() -> void:
 	erase_button.icon = get_theme_icon("Eraser", "EditorIcons")
 	erase_all_button.icon = get_theme_icon("Clear", "EditorIcons")
 	erase_all_button.self_modulate = Color(1.0, 0.3, 0.3, 1.0)
+	layer_highlight.icon = get_theme_icon("TileMapHighlightSelected", "EditorIcons")
+	layer_grid.icon = get_theme_icon("Grid", "EditorIcons")
+
+	_setup_tooltips()
 
 	visibility_changed.connect(_on_visibility_changed)
 
 	draw_button.pressed.connect(_on_tool_changed.bind(PaintTool.DRAW))
-
-	layer_highlight.icon = get_theme_icon("TileMapHighlightSelected", "EditorIcons")
-	layer_grid.icon = get_theme_icon("Grid", "EditorIcons")
 	line_button.pressed.connect(_on_tool_changed.bind(PaintTool.LINE))
 	rect_button.pressed.connect(_on_tool_changed.bind(PaintTool.RECT))
 	fill_button.pressed.connect(_on_tool_changed.bind(PaintTool.BUCKET))
@@ -135,6 +136,65 @@ func _on_visibility_changed() -> void:
 		mouse_down = false
 		draw_overlay = false
 		update_overlay.emit()
+
+func _setup_tooltips() -> void:
+	draw_button.tooltip_text = _make_tooltip_text({
+		"Draw terrain": &"ez_tile_draw"
+	})
+	line_button.tooltip_text = _make_tooltip_text({
+		"Draw line": &"ez_tile_line",
+		"Quick line": "Shift"
+	})
+	rect_button.tooltip_text = _make_tooltip_text({
+		"Fill a rectangular region": &"ez_tile_rect",
+		"Quick rectangle": "Ctrl+Shift"
+	})
+	fill_button.tooltip_text = _make_tooltip_text({
+		"Bucket fill contiguous terrain": &"ez_tile_fill"
+	})
+	pick_button.tooltip_text = _make_tooltip_text({
+		"Pick terrain from a cell": &"ez_tile_pick",
+		"Quick pick": "Ctrl+Click"
+	})
+	select_button.tooltip_text = _make_tooltip_text({
+		"Select cells": &"ez_tile_select",
+		"Add to selection": "Shift",
+		"Subtract from selection": "Ctrl",
+		"Move selection": "Click+Drag",
+		"Cut, Copy, Paste": "Ctrl+X/C/V"
+	})
+	erase_button.tooltip_text = _make_tooltip_text({
+		"Erase cells": &"ez_tile_erase",
+		"Quick erase": "Right-click"
+	})
+	erase_all_button.tooltip_text = "Erase all tiles on the current layer"
+	layer_highlight.tooltip_text = "Highlight Selected TileMap Layer"
+	layer_grid.tooltip_text = "Toggle grid visibility."
+
+func _get_action_key_text(action: StringName) -> String:
+	var events := InputMap.action_get_events(action)
+	if events.is_empty():
+		return action
+	for ev in events:
+		if ev is InputEventKey:
+			return OS.get_keycode_string(ev.keycode)
+	return events[0].as_text()
+
+func _make_tooltip_text(entries: Dictionary) -> String:
+	var lines: PackedStringArray = []
+	for description in entries:
+		var val = entries[description]
+		if val is StringName:
+			var key := _get_action_key_text(val)
+			if key.is_empty():
+				lines.append(description)
+			else:
+				lines.append("%s (%s)" % [description, key])
+		elif val is String and not val.is_empty():
+			lines.append("%s (%s)" % [description, val])
+		else:
+			lines.append(description)
+	return "\n".join(lines)
 
 func _is_tilemap_editable() -> bool:
 	return tilemap != null and tilemap.is_visible_in_tree()
@@ -1328,11 +1388,34 @@ func _handle_key_event(event: InputEventKey) -> bool:
 				return true
 		return false
 
+	# Action-based tool switching (supports InputMap remapping)
+	if event.is_action_pressed("ez_tile_draw"):
+		_select_tool_button(PaintTool.DRAW)
+		return true
+	if event.is_action_pressed("ez_tile_line"):
+		_select_tool_button(PaintTool.LINE)
+		return true
+	if event.is_action_pressed("ez_tile_rect"):
+		_select_tool_button(PaintTool.RECT)
+		return true
+	if event.is_action_pressed("ez_tile_fill"):
+		_select_tool_button(PaintTool.BUCKET)
+		return true
+	if event.is_action_pressed("ez_tile_select"):
+		_select_tool_button(PaintTool.SEL)
+		return true
+	if event.is_action_pressed("ez_tile_pick"):
+		_select_tool_button(PaintTool.PICK)
+		return true
+	if event.is_action_pressed("ez_tile_erase"):
+		_select_tool_button(PaintTool.ERASE)
+		return true
+
+	# Fallback: shortcut-based matching on buttons (InputEventKey shortcuts)
 	for i in range(1, _tool_buttons.size()):
 		var btn := _tool_buttons[i] as Button
 		if btn and btn.visible and not btn.disabled and btn.shortcut and btn.shortcut.matches_event(event):
-			btn.button_pressed = true
-			btn.pressed.emit()
+			_select_tool_button(i)
 			return true
 	return false
 
