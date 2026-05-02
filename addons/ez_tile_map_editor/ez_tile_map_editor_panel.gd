@@ -3,7 +3,7 @@ extends Control
 
 signal update_overlay
 
-enum PaintTool { NONE, DRAW, LINE, RECT, BUCKET, PICK, ERASE, SEL }
+enum PaintTool { NONE, SEL, DRAW, LINE, RECT, BUCKET, PICK, ERASE }
 
 @onready var draw_button: Button = %Draw
 @onready var line_button: Button = %Line
@@ -95,7 +95,7 @@ func _ready() -> void:
 	layer_grid.toggled.connect(_on_layer_grid_toggled)
 
 	draw_button.button_pressed = true
-	_tool_buttons = [null, draw_button, line_button, rect_button, fill_button, pick_button, erase_button, select_button]
+	_tool_buttons = [null, select_button, draw_button, line_button, rect_button, fill_button, pick_button, erase_button]
 	_update_empty_state()
 
 func _is_tilemap_editable() -> bool:
