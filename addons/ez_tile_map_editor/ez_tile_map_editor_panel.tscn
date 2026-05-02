@@ -15,19 +15,19 @@ events = [SubResource("action_draw")]
 _source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#ff5d5d\" d=\"M2 1v8.586l1.293-1.293a1 1 0 0 1 1.414 0L7 10.587l2.293-2.293a1 1 0 0 1 1.414 0L13 10.586l1-1V6H9V1H2zm8 0v4h4zm-6 9.414-2 2V15h12v-2.586l-.293.293a1 1 0 0 1-1.414 0L10 10.414l-2.293 2.293a1 1 0 0 1-1.414 0L4 10.414z\"/></svg>
 "
 
-[sub_resource type="InputEventAction" id="action_line"]
-action = &"ez_tile_line"
-
-[sub_resource type="Shortcut" id="shortcut_line"]
-resource_name = "Line Tool"
-events = [SubResource("action_line")]
-
 [sub_resource type="InputEventAction" id="action_rect"]
 action = &"ez_tile_rect"
 
 [sub_resource type="Shortcut" id="shortcut_rect"]
 resource_name = "Rectangle Tool"
 events = [SubResource("action_rect")]
+
+[sub_resource type="InputEventAction" id="action_line"]
+action = &"ez_tile_line"
+
+[sub_resource type="Shortcut" id="shortcut_line"]
+resource_name = "Line Tool"
+events = [SubResource("action_line")]
 
 [sub_resource type="InputEventAction" id="action_fill"]
 action = &"ez_tile_fill"
@@ -83,6 +83,7 @@ layout_mode = 2
 [node name="Draw" type="Button" parent="VBoxContainer/Toolbar" unique_id=1129836330]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Draw tile (D)"
 disabled = true
 toggle_mode = true
 button_pressed = true
@@ -91,20 +92,11 @@ shortcut = SubResource("shortcut_draw")
 shortcut_in_tooltip = false
 icon = SubResource("DPITexture_kny1k")
 
-[node name="Line" type="Button" parent="VBoxContainer/Toolbar" unique_id=1030726166]
-unique_name_in_owner = true
-layout_mode = 2
-disabled = true
-toggle_mode = true
-button_group = SubResource("draw_group")
-shortcut = SubResource("shortcut_line")
-shortcut_in_tooltip = false
-icon = SubResource("DPITexture_kny1k")
-flat = true
-
 [node name="Rect" type="Button" parent="VBoxContainer/Toolbar" unique_id=1024733811]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Rectangle (R)
+Quick rectangle (Shift)"
 disabled = true
 toggle_mode = true
 button_group = SubResource("draw_group")
@@ -113,9 +105,23 @@ shortcut_in_tooltip = false
 icon = SubResource("DPITexture_kny1k")
 flat = true
 
+[node name="Line" type="Button" parent="VBoxContainer/Toolbar" unique_id=1030726166]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Line (L)
+Quick line (Ctrl)"
+disabled = true
+toggle_mode = true
+button_group = SubResource("draw_group")
+shortcut = SubResource("shortcut_line")
+shortcut_in_tooltip = false
+icon = SubResource("DPITexture_kny1k")
+flat = true
+
 [node name="Fill" type="Button" parent="VBoxContainer/Toolbar" unique_id=1211768775]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Flood fill (B)"
 disabled = true
 toggle_mode = true
 button_group = SubResource("draw_group")
@@ -130,6 +136,11 @@ layout_mode = 2
 [node name="Select" type="Button" parent="VBoxContainer/Toolbar" unique_id=839352345]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Select tiles (S)
+Add (Shift)
+Subtract (Ctrl)
+Move (Click+Drag)
+Cut, Copy, Paste (Ctrl+X/C/V)"
 disabled = true
 toggle_mode = true
 button_group = SubResource("draw_group")
@@ -141,6 +152,8 @@ flat = true
 [node name="Pick" type="Button" parent="VBoxContainer/Toolbar" unique_id=1034510133]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Pick tile (P)
+Quick pick (Alt)"
 disabled = true
 toggle_mode = true
 button_group = SubResource("draw_group")
@@ -152,6 +165,8 @@ flat = true
 [node name="Erase" type="Button" parent="VBoxContainer/Toolbar" unique_id=343540273]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Erase tile (E)
+Quick erase (Right click)"
 toggle_mode = true
 button_group = SubResource("draw_group")
 shortcut = SubResource("shortcut_erase")
@@ -166,6 +181,7 @@ layout_mode = 2
 unique_name_in_owner = true
 self_modulate = Color(1, 0.3, 0.3, 1)
 layout_mode = 2
+tooltip_text = "Erase all tiles on selected tile map layer"
 icon = SubResource("DPITexture_kny1k")
 flat = true
 
@@ -176,6 +192,7 @@ size_flags_horizontal = 3
 [node name="LayerHighlight" type="Button" parent="VBoxContainer/Toolbar" unique_id=1321237291]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Highlight selected tile map layer"
 toggle_mode = true
 icon = SubResource("DPITexture_kny1k")
 flat = true
@@ -183,6 +200,7 @@ flat = true
 [node name="LayerGrid" type="Button" parent="VBoxContainer/Toolbar" unique_id=692744213]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Toggle grid visibility"
 toggle_mode = true
 icon = SubResource("DPITexture_kny1k")
 flat = true

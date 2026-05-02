@@ -19,8 +19,8 @@ func _is_draw_tool() -> bool:
 	return paint_tool in _draw_tools
 
 @onready var draw_button: Button = %Draw
-@onready var line_button: Button = %Line
 @onready var rect_button: Button = %Rect
+@onready var line_button: Button = %Line
 @onready var fill_button: Button = %Fill
 @onready var pick_button: Button = %Pick
 @onready var select_button: Button = %Select
@@ -93,8 +93,8 @@ var _syncing_native: bool = false
 
 func _ready() -> void:
 	draw_button.icon = get_theme_icon("Edit", "EditorIcons")
-	line_button.icon = get_theme_icon("Line", "EditorIcons")
 	rect_button.icon = get_theme_icon("Rectangle", "EditorIcons")
+	line_button.icon = get_theme_icon("Line", "EditorIcons")
 	fill_button.icon = get_theme_icon("Bucket", "EditorIcons")
 	select_button.icon = get_theme_icon("ToolSelect", "EditorIcons")
 	pick_button.icon = get_theme_icon("ColorPick", "EditorIcons")
@@ -109,8 +109,8 @@ func _ready() -> void:
 	visibility_changed.connect(_on_visibility_changed)
 
 	draw_button.pressed.connect(_on_tool_changed.bind(PaintTool.DRAW))
-	line_button.pressed.connect(_on_tool_changed.bind(PaintTool.LINE))
 	rect_button.pressed.connect(_on_tool_changed.bind(PaintTool.RECT))
+	line_button.pressed.connect(_on_tool_changed.bind(PaintTool.LINE))
 	fill_button.pressed.connect(_on_tool_changed.bind(PaintTool.BUCKET))
 	select_button.pressed.connect(_on_tool_changed.bind(PaintTool.SEL))
 	pick_button.pressed.connect(_on_tool_changed.bind(PaintTool.PICK))
@@ -122,7 +122,7 @@ func _ready() -> void:
 	layer_grid.toggled.connect(_on_layer_grid_toggled)
 
 	draw_button.button_pressed = true
-	_tool_buttons = [null, draw_button, line_button, rect_button, fill_button, select_button, pick_button, erase_button]
+	_tool_buttons = [null, draw_button, rect_button, line_button, fill_button, select_button, pick_button, erase_button]
 	for btn in _tool_buttons:
 		if btn:
 			btn.toggled.connect(_on_tool_toggled)
@@ -142,37 +142,37 @@ func _on_visibility_changed() -> void:
 
 func _setup_tooltips() -> void:
 	draw_button.tooltip_text = _make_tooltip_text({
-		"Draw terrain": &"ez_tile_draw"
-	})
-	line_button.tooltip_text = _make_tooltip_text({
-		"Draw line": &"ez_tile_line",
-		"Quick line": "Shift"
+		"Draw tile": &"ez_tile_draw"
 	})
 	rect_button.tooltip_text = _make_tooltip_text({
-		"Fill a rectangular region": &"ez_tile_rect",
-		"Quick rectangle": "Ctrl+Shift"
+		"Rectangle": &"ez_tile_rect",
+		"Quick rectangle": "Shift"
+	})
+	line_button.tooltip_text = _make_tooltip_text({
+		"Line": &"ez_tile_line",
+		"Quick line": "Ctrl"
 	})
 	fill_button.tooltip_text = _make_tooltip_text({
-		"Bucket fill contiguous terrain": &"ez_tile_fill"
+		"Flood fill": &"ez_tile_fill"
 	})
 	pick_button.tooltip_text = _make_tooltip_text({
-		"Pick terrain from a cell": &"ez_tile_pick",
-		"Quick pick": "Ctrl+Click"
+		"Pick tile": &"ez_tile_pick",
+		"Quick pick": "Alt"
 	})
 	select_button.tooltip_text = _make_tooltip_text({
-		"Select cells": &"ez_tile_select",
-		"Add to selection": "Shift",
-		"Subtract from selection": "Ctrl",
-		"Move selection": "Click+Drag",
+		"Select tiles": &"ez_tile_select",
+		"Add": "Shift",
+		"Subtract": "Ctrl",
+		"Move": "Click+Drag",
 		"Cut, Copy, Paste": "Ctrl+X/C/V"
 	})
 	erase_button.tooltip_text = _make_tooltip_text({
-		"Erase cells": &"ez_tile_erase",
-		"Quick erase": "Right-click"
+		"Erase tile": &"ez_tile_erase",
+		"Quick erase": "Right click"
 	})
-	erase_all_button.tooltip_text = "Erase all tiles on the current layer"
-	layer_highlight.tooltip_text = "Highlight Selected TileMap Layer"
-	layer_grid.tooltip_text = "Toggle grid visibility."
+	erase_all_button.tooltip_text = "Erase all tiles on selected tile map layer"
+	layer_highlight.tooltip_text = "Highlight selected tile map layer"
+	layer_grid.tooltip_text = "Toggle grid visibility"
 
 func _get_action_key_text(action: StringName) -> String:
 	var events := InputMap.action_get_events(action)
@@ -224,8 +224,8 @@ func _update_tool_buttons() -> void:
 	var editable := _is_tilemap_editable()
 
 	draw_button.disabled = not editable
-	line_button.disabled = not editable
 	rect_button.disabled = not editable
+	line_button.disabled = not editable
 	fill_button.disabled = not editable
 	pick_button.disabled = not editable
 	select_button.disabled = not editable
@@ -1427,11 +1427,11 @@ func _handle_key_event(event: InputEventKey) -> bool:
 	if event.is_action_pressed("ez_tile_draw"):
 		_select_tool_button(PaintTool.DRAW)
 		return true
-	if event.is_action_pressed("ez_tile_line"):
-		_select_tool_button(PaintTool.LINE)
-		return true
 	if event.is_action_pressed("ez_tile_rect"):
 		_select_tool_button(PaintTool.RECT)
+		return true
+	if event.is_action_pressed("ez_tile_line"):
+		_select_tool_button(PaintTool.LINE)
 		return true
 	if event.is_action_pressed("ez_tile_fill"):
 		_select_tool_button(PaintTool.BUCKET)
