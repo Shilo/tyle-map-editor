@@ -57,18 +57,23 @@ func _exit_tree() -> void:
 
 
 func _setup_input_actions() -> void:
-	for action in DEFAULT_INPUT_BINDINGS:
-		if not InputMap.has_action(action):
-			InputMap.add_action(action)
+	for action: String in DEFAULT_INPUT_BINDINGS:
+		var path: String = "input/" + action
+		if not ProjectSettings.has_setting(path):
 			var ev := InputEventKey.new()
 			ev.keycode = DEFAULT_INPUT_BINDINGS[action]
 			ev.command_or_control_autoremap = false
+			ProjectSettings.set_setting(path, {"deadzone": 0.5, "events": [ev]})
+			InputMap.add_action(action)
 			InputMap.action_add_event(action, ev)
 			_log("  added input action: %s (key=%d)" % [action, DEFAULT_INPUT_BINDINGS[action]])
 
 
 func _teardown_input_actions() -> void:
-	for action in DEFAULT_INPUT_BINDINGS:
+	for action: String in DEFAULT_INPUT_BINDINGS:
+		var path: String = "input/" + action
+		if ProjectSettings.has_setting(path):
+			ProjectSettings.clear(path)
 		if InputMap.has_action(action):
 			InputMap.erase_action(action)
 			_log("  removed input action: %s" % action)

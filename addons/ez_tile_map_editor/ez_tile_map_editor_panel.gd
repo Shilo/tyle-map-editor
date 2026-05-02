@@ -388,9 +388,10 @@ func _on_layer_highlight_toggled(toggled: bool) -> void:
 	var settings := EditorInterface.get_editor_settings()
 	settings.set_setting("editors/tiles_editor/highlight_selected_layer", toggled)
 	settings.emit_changed()
-	update_overlay.emit()
+	_toggle_native_button("Highlight Selected TileMap Layer", toggled)
 	if plugin and plugin.has_method("_queue_overlay_redraw"):
 		plugin._queue_overlay_redraw()
+	update_overlay.emit()
 
 
 func _on_layer_grid_toggled(toggled: bool) -> void:
@@ -398,9 +399,34 @@ func _on_layer_grid_toggled(toggled: bool) -> void:
 	var settings := EditorInterface.get_editor_settings()
 	settings.set_setting("editors/tiles_editor/display_grid", toggled)
 	settings.emit_changed()
-	update_overlay.emit()
+	_toggle_native_button("Toggle grid visibility.", toggled)
 	if plugin and plugin.has_method("_queue_overlay_redraw"):
 		plugin._queue_overlay_redraw()
+	update_overlay.emit()
+
+
+func _toggle_native_button(tooltip: String, pressed: bool) -> void:
+	var editor_base := EditorInterface.get_base_control()
+	_find_and_toggle_button(editor_base, tooltip, pressed)
+
+
+func _find_and_toggle_button(node: Node, tooltip: String, pressed: bool) -> void:
+	for child in node.get_children():
+		if child is BaseButton:
+			var btn: BaseButton = child
+			if btn.tooltip_text == tooltip:
+				_log("  toggling native button '%s' to %s (was %s)" % [tooltip, pressed, btn.button_pressed])
+				btn.set_pressed_no_signal(pressed)
+				btn.toggled.emit(pressed)
+				return
+		_find_and_toggle_button(child, tooltip, pressed)
+
+
+func _find_native_tilemap_buttons() -> void:
+	_log("_find_native_tilemap_buttons: syncing native button states")
+	var settings := EditorInterface.get_editor_settings()
+	_toggle_native_button("Toggle grid visibility.", settings.get_setting("editors/tiles_editor/display_grid"))
+	_toggle_native_button("Highlight Selected TileMap Layer", settings.get_setting("editors/tiles_editor/highlight_selected_layer"))
 
 
 func about_to_be_visible() -> void:
@@ -415,6 +441,7 @@ func about_to_be_visible() -> void:
 	layer_highlight.set_pressed_no_signal(hl)
 	layer_grid.set_pressed_no_signal(grid)
 	_update_empty_state()
+	_find_native_tilemap_buttons()
 
 
 func _get_selected_terrain() -> Dictionary:
