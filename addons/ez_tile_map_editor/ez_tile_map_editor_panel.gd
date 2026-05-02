@@ -1,12 +1,6 @@
 @tool
 extends Control
 
-const DEBUG := true
-
-func _log(msg: String) -> void:
-	if DEBUG:
-		print("[EZ-Tile] ", msg)
-
 signal update_overlay
 
 enum PaintTool { NONE, DRAW, LINE, RECT, BUCKET, PICK, ERASE }
@@ -29,14 +23,11 @@ enum PaintTool { NONE, DRAW, LINE, RECT, BUCKET, PICK, ERASE }
 
 var tilemap: TileMapLayer = null:
 	set(v):
-		_log("tilemap setter: old=%s new=%s" % [tilemap.name if tilemap else "null", v.name if v else "null"])
 		if tilemap and tilemap.visibility_changed.is_connected(_on_tilemap_visibility_changed):
-			_log("  disconnecting visibility_changed from old tilemap")
 			tilemap.visibility_changed.disconnect(_on_tilemap_visibility_changed)
 		tilemap = v
 		if tilemap:
 			if not tilemap.visibility_changed.is_connected(_on_tilemap_visibility_changed):
-				_log("  connecting visibility_changed to new tilemap (visible_in_tree=%s)" % tilemap.is_visible_in_tree())
 				tilemap.visibility_changed.connect(_on_tilemap_visibility_changed)
 		tileset = v.tile_set if v else null
 		_update_layer_dropdown.call_deferred()
@@ -44,7 +35,6 @@ var tilemap: TileMapLayer = null:
 
 var tileset: TileSet = null:
 	set(v):
-		_log("tileset setter: old=%s new=%s" % [tileset.resource_path if tileset else "null", v.resource_path if v else "null"])
 		if tileset and tileset.changed.is_connected(_on_tileset_changed):
 			tileset.changed.disconnect(_on_tileset_changed)
 		tileset = v
@@ -75,7 +65,6 @@ var _native_grid_button: BaseButton = null
 var _native_highlight_button: BaseButton = null
 var _syncing_native: bool = false
 
-
 func _ready() -> void:
 	draw_button.icon = get_theme_icon("Edit", "EditorIcons")
 	line_button.icon = get_theme_icon("Line", "EditorIcons")
@@ -104,46 +93,31 @@ func _ready() -> void:
 	draw_button.button_pressed = true
 	_tool_buttons = [null, draw_button, line_button, rect_button, fill_button, pick_button, erase_button]
 	_update_empty_state()
-	_log("_ready complete: tilemap=%s tileset=%s paint_tool=%d" % [tilemap.name if tilemap else "null", tileset.resource_path if tileset else "null", paint_tool])
-
 
 func _is_tilemap_editable() -> bool:
 	return tilemap != null and tilemap.is_visible_in_tree()
 
-
 func _update_empty_state() -> void:
-	_log("_update_empty_state: tilemap=%s visible_in_tree=%s tileset=%s terrains=%d selected=%d" % [
-		tilemap.name if tilemap else "null",
-		tilemap.is_visible_in_tree() if tilemap else "N/A",
-		tileset.resource_path if tileset else "null",
-		flattened_terrains.size(),
-		selected_index
-	])
 	if not tilemap:
-		_log("  -> no tilemap (show default empty)")
 		empty_label.text = "No terrain sets defined.\nUse the TileSet bottom panel to add terrains."
 		empty_label.visible = true
 		scroll_container.visible = false
 	elif not tilemap.is_visible_in_tree():
-		_log("  -> tilemap disabled or invisible")
 		empty_label.text = "The TileMapLayer is disabled or invisible"
 		empty_label.visible = true
 		scroll_container.visible = false
 	elif not tileset or flattened_terrains.is_empty():
-		_log("  -> no tileset or no terrains")
 		empty_label.text = "No terrain sets defined.\nUse the TileSet bottom panel to add terrains."
 		empty_label.visible = true
 		scroll_container.visible = false
 	else:
-		_log("  -> showing terrain grid")
 		empty_label.visible = false
 		scroll_container.visible = true
 	_update_tool_buttons()
 
-
 func _update_tool_buttons() -> void:
 	var editable := _is_tilemap_editable()
-	_log("_update_tool_buttons: editable=%s" % editable)
+
 	draw_button.disabled = not editable
 	line_button.disabled = not editable
 	rect_button.disabled = not editable
@@ -151,48 +125,32 @@ func _update_tool_buttons() -> void:
 	pick_button.disabled = not editable
 	_update_erase_buttons()
 
-
 func _on_tilemap_visibility_changed() -> void:
-	_log("_on_tilemap_visibility_changed: tilemap=%s visible=%s visible_in_tree=%s" % [
-		tilemap.name if tilemap else "null",
-		tilemap.visible if tilemap else "N/A",
-		tilemap.is_visible_in_tree() if tilemap else "N/A"
-	])
 	_update_empty_state.call_deferred()
 
-
 func _on_tool_changed(tool: PaintTool) -> void:
-	_log("_on_tool_changed: from=%d to=%d (DRAW=1,LINE=2,RECT=3,BUCKET=4,PICK=5,ERASE=6)" % [paint_tool, tool])
 	if paint_tool != PaintTool.PICK:
 		_prev_tool = paint_tool
 	paint_tool = tool
-	_log("  prev_tool=%d paint_tool=%d" % [_prev_tool, paint_tool])
-
 
 func _select_tool_button(tool: PaintTool) -> void:
-	_log("_select_tool_button: tool=%d (from pick, going back to tool)" % tool)
 	paint_tool = tool
 	if tool > 0 and tool < _tool_buttons.size():
 		_tool_buttons[tool].button_pressed = true
 
-
 func _on_tileset_changed() -> void:
 	_refresh_terrains.call_deferred()
-
 
 # ---- TERRAIN GRID ----
 
 var _icon_cache: Dictionary = {}
 
-
 func _refresh_terrains() -> void:
-	_log("_refresh_terrains: tileset=%s" % (tileset.resource_path if tileset else "null"))
 	for c in terrain_grid.get_children():
 		terrain_grid.remove_child(c)
 		c.free()
 	flattened_terrains.clear()
 	if not tileset:
-		_log("  no tileset, calling _update_empty_state")
 		_update_empty_state()
 		return
 	_build_icon_cache()
@@ -206,10 +164,9 @@ func _refresh_terrains() -> void:
 			flattened_terrains.append({set = set_idx, idx = ter_idx, name = name, color = color, icon_texture = icon.get("texture", null)})
 			terrain_count += 1
 	if terrain_count == 0:
-		_log("  terrain_count=0, calling _update_empty_state")
 		_update_empty_state()
 		return
-	_log("  built %d terrains, creating entries" % terrain_count)
+
 	for i in flattened_terrains.size():
 		_create_terrain_entry(flattened_terrains[i], i)
 	if selected_index == -1 and flattened_terrains.size() > 0:
@@ -220,7 +177,6 @@ func _refresh_terrains() -> void:
 	_update_selection_buttons()
 	_update_erase_buttons.call_deferred()
 	call_deferred("_update_layer_dropdown")
-
 
 func _build_icon_cache() -> void:
 	_icon_cache.clear()
@@ -238,7 +194,6 @@ func _build_icon_cache() -> void:
 				if td and td.terrain_set >= 0:
 					_cache_terrain_icon(td, source, coord, alt_id)
 
-
 func _cache_terrain_icon(td: TileData, source: TileSetAtlasSource, coord: Vector2i, alt_id: int) -> void:
 	var set_idx := td.terrain_set
 	if set_idx < 0:
@@ -248,7 +203,6 @@ func _cache_terrain_icon(td: TileData, source: TileSetAtlasSource, coord: Vector
 		if not _icon_cache.has(key_center) and source.texture:
 			_icon_cache[key_center] = _make_icon(source, coord)
 
-
 func _make_icon(source: TileSetAtlasSource, coord: Vector2i) -> Dictionary:
 	if not source or not source.texture:
 		return {}
@@ -257,7 +211,6 @@ func _make_icon(source: TileSetAtlasSource, coord: Vector2i) -> Dictionary:
 	var region := source.get_tile_texture_region(coord, 0)
 	atlas_tex.region = region
 	return {texture = atlas_tex}
-
 
 func _create_terrain_entry(data: Dictionary, index: int) -> void:
 	var panel := PanelContainer.new()
@@ -290,12 +243,10 @@ func _create_terrain_entry(data: Dictionary, index: int) -> void:
 	if index == selected_index:
 		_update_entry_style(panel, true)
 
-
 func _on_entry_gui_input(event: InputEvent, panel: PanelContainer, index: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		selected_index = index
 		_update_selection_buttons()
-
 
 func _update_entry_style(panel: PanelContainer, selected: bool) -> void:
 	if selected:
@@ -320,7 +271,6 @@ func _update_entry_style(panel: PanelContainer, selected: bool) -> void:
 		empty_style.content_margin_bottom = 0
 		panel.add_theme_stylebox_override("panel", empty_style)
 
-
 func _update_selection_buttons() -> void:
 	for i in terrain_grid.get_child_count():
 		var panel := terrain_grid.get_child(i) as PanelContainer
@@ -328,37 +278,31 @@ func _update_selection_buttons() -> void:
 			continue
 		_update_entry_style(panel, i == selected_index)
 
-
 func _update_erase_buttons() -> void:
 	var editable := _is_tilemap_editable()
 	var has_tiles := tilemap != null and tilemap.get_used_cells().size() > 0
-	_log("_update_erase_buttons: editable=%s has_tiles=%s" % [editable, has_tiles])
+
 	erase_button.disabled = not editable or not has_tiles
 	erase_all_button.disabled = not editable or not has_tiles
 
-
 func _update_layer_dropdown() -> void:
-	_log("_update_layer_dropdown: tilemap=%s" % (tilemap.name if tilemap else "null"))
 	layer_select.clear()
 	if not tilemap:
 		layer_select.disabled = true
-		_log("  no tilemap, disabled")
 		return
 	var root := EditorInterface.get_edited_scene_root()
 	if not root:
 		layer_select.disabled = true
 		layer_select.add_item(tilemap.name)
 		layer_select.select(0)
-		_log("  no root, single item: %s" % tilemap.name)
 		return
 	var siblings: Array[Node] = []
 	_collect_visible_tilemap_layers(root, siblings)
-	_log("  found %d visible tilemap layers" % siblings.size())
+
 	if siblings.size() <= 1:
 		layer_select.disabled = true
 		layer_select.add_item(tilemap.name)
 		layer_select.select(0)
-		_log("  single layer, disabled dropdown")
 		return
 	for i in siblings.size():
 		var lyr: TileMapLayer = siblings[i]
@@ -366,8 +310,6 @@ func _update_layer_dropdown() -> void:
 		if lyr == tilemap:
 			layer_select.select(i)
 	layer_select.disabled = false
-	_log("  dropdown populated with %d items" % siblings.size())
-
 
 func _collect_visible_tilemap_layers(node: Node, result: Array[Node]) -> void:
 	for child in node.get_children():
@@ -375,7 +317,6 @@ func _collect_visible_tilemap_layers(node: Node, result: Array[Node]) -> void:
 			result.append(child)
 		if child is Node:
 			_collect_visible_tilemap_layers(child, result)
-
 
 func _on_layer_selected(idx: int) -> void:
 	var root := EditorInterface.get_edited_scene_root()
@@ -386,11 +327,10 @@ func _on_layer_selected(idx: int) -> void:
 	if idx >= 0 and idx < siblings.size():
 		EditorInterface.edit_node(siblings[idx])
 
-
 func _on_layer_highlight_toggled(toggled: bool) -> void:
 	if _syncing_native:
 		return
-	_log("_on_layer_highlight_toggled: toggled=%s" % toggled)
+
 	var settings := EditorInterface.get_editor_settings()
 	settings.set_setting("editors/tiles_editor/highlight_selected_layer", toggled)
 	settings.emit_changed()
@@ -399,11 +339,10 @@ func _on_layer_highlight_toggled(toggled: bool) -> void:
 		plugin._queue_overlay_redraw()
 	update_overlay.emit()
 
-
 func _on_layer_grid_toggled(toggled: bool) -> void:
 	if _syncing_native:
 		return
-	_log("_on_layer_grid_toggled: toggled=%s" % toggled)
+
 	var settings := EditorInterface.get_editor_settings()
 	settings.set_setting("editors/tiles_editor/display_grid", toggled)
 	settings.emit_changed()
@@ -412,28 +351,23 @@ func _on_layer_grid_toggled(toggled: bool) -> void:
 		plugin._queue_overlay_redraw()
 	update_overlay.emit()
 
-
 func _toggle_native(tooltip: String, pressed: bool) -> void:
 	var editor := _ensure_native_tilemap_editor()
 	if editor:
 		_find_and_toggle_in(editor, tooltip, pressed)
 	else:
-		_log("_toggle_native: TileMapLayerEditor not found, searching from root")
 		_find_and_toggle_in(EditorInterface.get_base_control(), tooltip, pressed)
-
 
 func _find_and_toggle_in(node: Node, tooltip: String, pressed: bool) -> void:
 	for child in node.get_children():
 		if child is BaseButton:
 			var btn: BaseButton = child
 			if btn.tooltip_text == tooltip:
-				_log("  toggling native '%s' to %s (was %s)" % [tooltip, pressed, btn.button_pressed])
 				btn.set_pressed_no_signal(pressed)
 				btn.toggled.emit(pressed)
 				_connect_native_button(btn, tooltip)
 				return
 		_find_and_toggle_in(child, tooltip, pressed)
-
 
 func _connect_native_button(btn: BaseButton, tooltip: String) -> void:
 	if tooltip == "Toggle grid visibility.":
@@ -443,7 +377,6 @@ func _connect_native_button(btn: BaseButton, tooltip: String) -> void:
 			_native_grid_button = btn
 			if not btn.toggled.is_connected(_on_native_grid_toggled):
 				btn.toggled.connect(_on_native_grid_toggled)
-				_log("  connected to native grid button toggled")
 	elif tooltip == "Highlight Selected TileMap Layer":
 		if _native_highlight_button != btn:
 			if _native_highlight_button and _native_highlight_button.toggled.is_connected(_on_native_highlight_toggled):
@@ -451,44 +384,35 @@ func _connect_native_button(btn: BaseButton, tooltip: String) -> void:
 			_native_highlight_button = btn
 			if not btn.toggled.is_connected(_on_native_highlight_toggled):
 				btn.toggled.connect(_on_native_highlight_toggled)
-				_log("  connected to native highlight button toggled")
-
-
 func _on_native_grid_toggled(pressed: bool) -> void:
 	if _syncing_native:
 		return
 	_syncing_native = true
-	_log("_on_native_grid_toggled: native grid toggled to %s, syncing" % pressed)
+
 	layer_grid.set_pressed_no_signal(pressed)
 	var settings := EditorInterface.get_editor_settings()
 	settings.set_setting("editors/tiles_editor/display_grid", pressed)
 	_syncing_native = false
 
-
 func _on_native_highlight_toggled(pressed: bool) -> void:
 	if _syncing_native:
 		return
 	_syncing_native = true
-	_log("_on_native_highlight_toggled: native highlight toggled to %s, syncing" % pressed)
+
 	layer_highlight.set_pressed_no_signal(pressed)
 	var settings := EditorInterface.get_editor_settings()
 	settings.set_setting("editors/tiles_editor/highlight_selected_layer", pressed)
 	_syncing_native = false
-
 
 func _ensure_native_tilemap_editor() -> Object:
 	if _native_tilemap_editor and is_instance_valid(_native_tilemap_editor):
 		return _native_tilemap_editor
 	var editor_base := EditorInterface.get_base_control()
 	_native_tilemap_editor = _find_tilemap_editor_in_tree(editor_base)
-	if _native_tilemap_editor:
-		_log("_ensure_native_tilemap_editor: found %s (class=%s)" % [_native_tilemap_editor, _native_tilemap_editor.get_class()])
 	return _native_tilemap_editor
-
 
 func _find_tilemap_editor_in_tree(node: Node) -> Object:
 	if node.name == "TileMap" and node.is_class("TileMapLayerEditor"):
-		_log("_find_tilemap_editor_in_tree: found %s" % node)
 		return node
 	for child in node.get_children():
 		var found := _find_tilemap_editor_in_tree(child)
@@ -496,41 +420,21 @@ func _find_tilemap_editor_in_tree(node: Node) -> Object:
 			return found
 	return null
 
-
-func _find_native_tilemap_buttons() -> void:
-	_log("_find_native_tilemap_buttons: syncing native editor state")
-	var settings := EditorInterface.get_editor_settings()
-	var editor := _ensure_native_tilemap_editor()
-	if editor:
-		# When the native "TileMap" tab is selected, the TileMapLayerEditor
-		# receives visibility notifications that enable overlay drawing.
-		# Simulate those notifications so the grid/highlight draw even when
-		# our "EZ TileMap" tab is active.
-		editor.notification(NOTIFICATION_VISIBILITY_CHANGED)
-	_toggle_native("Toggle grid visibility.", settings.get_setting("editors/tiles_editor/display_grid"))
-	_toggle_native("Highlight Selected TileMap Layer", settings.get_setting("editors/tiles_editor/highlight_selected_layer"))
-
-
 func about_to_be_visible() -> void:
-	_log("about_to_be_visible: tilemap=%s tileset=%s" % [tilemap.name if tilemap else "null", tileset.resource_path if tileset else "null"])
 	if tilemap and tileset != tilemap.tile_set:
-		_log("  tileset mismatch, updating tileset")
 		tileset = tilemap.tile_set
 	var settings := EditorInterface.get_editor_settings()
 	var hl := settings.get_setting("editors/tiles_editor/highlight_selected_layer")
 	var grid := settings.get_setting("editors/tiles_editor/display_grid")
-	_log("  highlight_selected_layer=%s display_grid=%s" % [hl, grid])
+
 	layer_highlight.set_pressed_no_signal(hl)
 	layer_grid.set_pressed_no_signal(grid)
 	_update_empty_state()
-	_find_native_tilemap_buttons()
-
 
 func _get_selected_terrain() -> Dictionary:
 	if selected_index >= 0 and selected_index < flattened_terrains.size():
 		return flattened_terrains[selected_index]
 	return {}
-
 
 # ---- SAVE / RESTORE ----
 
@@ -541,7 +445,6 @@ func _save_cells(coords: Array) -> Dictionary:
 		state[c] = {has_cell = src != -1, source_id = src if src != -1 else 0, atlas_coords = tilemap.get_cell_atlas_coords(c) if src != -1 else Vector2i.ZERO, alternative_tile = tilemap.get_cell_alternative_tile(c) if src != -1 else 0}
 	return state
 
-
 func _restore_cells(saved: Dictionary, tm: TileMapLayer) -> void:
 	for c in saved:
 		var s: Dictionary = saved[c]
@@ -549,7 +452,6 @@ func _restore_cells(saved: Dictionary, tm: TileMapLayer) -> void:
 			tm.set_cell(c, s.source_id, s.atlas_coords, s.alternative_tile)
 		else:
 			tm.erase_cell(c)
-
 
 # ---- CANVAS INPUT ----
 
@@ -585,13 +487,10 @@ func canvas_input(event: InputEvent) -> bool:
 	var clicked: bool = event is InputEventMouseButton and event.pressed
 
 	if released:
-		_log("canvas_input RELEASE: mouse_down=%s tool=%d mouse_start=%s mouse_current=%s" % [mouse_down, paint_tool, mouse_start, mouse_current])
 		if not mouse_down:
-			_log("  -> NOT painting (mouse never went down for draw)")
 			return false
 		mouse_down = false
 		if paint_tool == PaintTool.LINE or paint_tool == PaintTool.RECT:
-			_log("  -> committing paint action for LINE/RECT")
 			_commit_paint_action()
 		drag_erasing = false
 		draw_overlay = false
@@ -599,7 +498,6 @@ func canvas_input(event: InputEvent) -> bool:
 		return true
 
 	if clicked:
-		_log("canvas_input CLICK: button=%d tool=%d ctrl=%s shift=%s" % [event.button_index, paint_tool, event.is_command_or_control_pressed(), event.shift_pressed])
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			drag_erasing = true
 		elif event.button_index == MOUSE_BUTTON_LEFT:
@@ -608,14 +506,11 @@ func canvas_input(event: InputEvent) -> bool:
 			return false
 
 		if event.is_command_or_control_pressed() and not event.shift_pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			_log("  ctrl+click PICK")
 			_pick_at_mouse()
 			return true
 
 		if paint_tool == PaintTool.PICK and event.button_index == MOUSE_BUTTON_LEFT:
-			_log("  PICK tool active, picking at mouse")
 			if _pick_at_mouse():
-				_log("  pick succeeded, reverting to tool %d" % _prev_tool)
 				_select_tool_button(_prev_tool)
 			return true
 
@@ -626,8 +521,6 @@ func canvas_input(event: InputEvent) -> bool:
 		update_overlay.emit()
 		drag_action_index += 1
 		drag_action_count = 0
-		_log("  mouse_down=true mouse_start=%s tool=%d" % [mouse_start, paint_tool])
-
 		if paint_tool == PaintTool.BUCKET:
 			_do_bucket_fill(drag_erasing)
 			mouse_down = false
@@ -638,41 +531,31 @@ func canvas_input(event: InputEvent) -> bool:
 		return true
 	return false
 
-
 func canvas_mouse_exited() -> void:
 	draw_overlay = false
 	update_overlay.emit()
 
-
 func _commit_paint_action() -> void:
-	_log("_commit_paint_action: tool=%d drag_erasing=%s selected=%d" % [paint_tool, drag_erasing, selected_index])
 	if paint_tool != PaintTool.LINE and paint_tool != PaintTool.RECT:
-		_log("  -> skipped (not LINE/RECT)")
 		return
 	if not undo_manager or not tileset:
-		_log("  -> skipped (no undo_manager or tileset)")
 		return
 	var cells := _get_brush_cells()
-	_log("  brush cells: %d" % cells.size())
+
 	if cells.is_empty():
-		_log("  -> skipped (no cells)")
 		return
 	var saved := _save_cells(_expand_cells(cells))
 	var t := _get_selected_terrain()
 	if drag_erasing or selected_index < 0:
-		_log("  -> erasing %d cells" % cells.size())
 		undo_manager.create_action("Erase Action", UndoRedo.MERGE_DISABLE, tilemap)
 		for c in cells:
 			undo_manager.add_do_method(tilemap, "erase_cell", c)
 		undo_manager.add_undo_method(self, "_restore_cells", saved, tilemap)
 	else:
-		_log("  -> painting %d cells (set=%d idx=%d)" % [cells.size(), t.set, t.idx])
 		undo_manager.create_action("Paint Action", UndoRedo.MERGE_DISABLE, tilemap)
 		undo_manager.add_do_method(tilemap, "set_cells_terrain_connect", cells, t.set, t.idx, true)
 		undo_manager.add_undo_method(self, "_restore_cells", saved, tilemap)
 	undo_manager.commit_action()
-	_log("  -> action committed")
-
 
 func _do_paint_stroke() -> void:
 	var cells := _get_stroke_cells()
@@ -697,7 +580,6 @@ func _do_paint_stroke() -> void:
 	undo_manager.commit_action()
 	drag_action_count += 1
 
-
 func _get_stroke_cells() -> Array[Vector2i]:
 	match paint_tool:
 		PaintTool.DRAW, PaintTool.ERASE:
@@ -708,7 +590,6 @@ func _get_stroke_cells() -> Array[Vector2i]:
 			return []
 	return []
 
-
 func _expand_cells(cells: Array[Vector2i]) -> Array:
 	var all := {}
 	for c in cells:
@@ -718,7 +599,6 @@ func _expand_cells(cells: Array[Vector2i]) -> Array:
 			if nb != c:
 				all[nb] = true
 	return all.keys()
-
 
 func _get_brush_cells() -> Array[Vector2i]:
 	match paint_tool:
@@ -734,7 +614,6 @@ func _get_brush_cells() -> Array[Vector2i]:
 					cells.append(Vector2i(x, y))
 			return cells
 	return []
-
 
 func _do_bucket_fill(erasing: bool) -> void:
 	var cells := _flood_fill(mouse_current)
@@ -756,7 +635,6 @@ func _do_bucket_fill(erasing: bool) -> void:
 	else:
 		return
 	undo_manager.commit_action()
-
 
 func _flood_fill(start: Vector2i) -> Array:
 	var target_src := tilemap.get_cell_source_id(start)
@@ -783,7 +661,6 @@ func _flood_fill(start: Vector2i) -> Array:
 			pending.append(p + nb)
 	return result
 
-
 func _pick_at_mouse() -> bool:
 	var td := tilemap.get_cell_tile_data(mouse_current)
 	if not td:
@@ -799,7 +676,6 @@ func _pick_at_mouse() -> bool:
 			_update_selection_buttons()
 			return true
 	return false
-
 
 # ---- CANVAS OVERLAY ----
 
@@ -837,7 +713,6 @@ func canvas_draw(overlay: Control) -> void:
 	for c in cells:
 		var cell_transform := Transform2D(0.0, cell_size, 0.0, tilemap.map_to_local(c))
 		overlay.draw_colored_polygon(transform * cell_transform * polygon, color)
-
 
 func _draw_our_grid(overlay: Control) -> void:
 	var settings := EditorInterface.get_editor_settings()
@@ -935,7 +810,6 @@ func _draw_our_grid(overlay: Control) -> void:
 				color.a *= opacity * scale_fading
 				overlay.draw_polyline(world_polygon, color, -1.0, false)
 
-
 func _get_tile_shape_polygon() -> PackedVector2Array:
 	match tileset.tile_shape:
 		TileSet.TILE_SHAPE_SQUARE:
@@ -958,7 +832,6 @@ func _get_tile_shape_polygon() -> PackedVector2Array:
 					pts[i] = Vector2(pts[i].y, pts[i].x)
 			return pts
 
-
 func _canvas_tilemap_transform() -> Transform2D:
 	if not tilemap:
 		return Transform2D.IDENTITY
@@ -969,7 +842,6 @@ func _canvas_tilemap_transform() -> Transform2D:
 		if container:
 			transform = editor_viewport.global_canvas_transform * container.get_transform() * transform
 	return transform
-
 
 # ---- LINE ALGORITHMS ----
 
@@ -1000,7 +872,6 @@ func _bresenham_line(from: Vector2i, to: Vector2i) -> Array[Vector2i]:
 			current.y += step.y
 	points.append(current)
 	return points
-
 
 func _tileset_line(from: Vector2i, to: Vector2i) -> Array[Vector2i]:
 	if tileset.tile_shape == TileSet.TILE_SHAPE_SQUARE:
@@ -1044,7 +915,6 @@ func _tileset_line(from: Vector2i, to: Vector2i) -> Array[Vector2i]:
 			points.append(Vector2i(current.y, current.x) if transposed else current)
 	return points
 
-
 # ---- ERASE ALL ----
 
 func _on_erase_all() -> void:
@@ -1060,7 +930,6 @@ func _on_erase_all() -> void:
 	)
 	dialog.canceled.connect(dialog.queue_free)
 
-
 func _erase_all_tiles() -> void:
 	if not tilemap or not undo_manager:
 		return
@@ -1071,7 +940,6 @@ func _erase_all_tiles() -> void:
 		undo_manager.add_do_method(tilemap, "erase_cell", c)
 	undo_manager.add_undo_method(self, "_restore_cells", saved, tilemap)
 	undo_manager.commit_action()
-
 
 # ---- UTILITY ----
 
