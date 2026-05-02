@@ -480,7 +480,7 @@ func canvas_input(event: InputEvent) -> bool:
 		elif mouse_down:
 			draw_overlay = true
 			update_overlay.emit()
-			if paint_tool == PaintTool.DRAW:
+			if paint_tool == PaintTool.DRAW or paint_tool == PaintTool.ERASE or drag_erasing:
 				_do_paint_stroke()
 
 	var released: bool = event is InputEventMouseButton and not event.pressed
