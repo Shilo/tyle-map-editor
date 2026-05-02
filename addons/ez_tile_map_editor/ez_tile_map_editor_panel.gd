@@ -3,10 +3,10 @@ extends Control
 
 signal update_overlay
 
-enum PaintTool { NONE, DRAW, LINE, RECT, BUCKET, SEL, PICK, ERASE }
+enum PaintTool { NONE, DRAW, RECT, LINE, BUCKET, SEL, PICK, ERASE }
 enum DragType { NONE, SELECT, MOVE, CLIPBOARD_PASTE }
 
-const _draw_tools: Array[int] = [PaintTool.DRAW, PaintTool.LINE, PaintTool.RECT, PaintTool.BUCKET]
+const _draw_tools: Array[int] = [PaintTool.DRAW, PaintTool.RECT, PaintTool.LINE, PaintTool.BUCKET]
 
 const COLOR_TRANSPARENT := Color(0, 0, 0, 0)
 const COLOR_SELECTION_OUTLINE := Color(0.3, 0.7, 1.0, 1.0)
@@ -286,7 +286,9 @@ func _exit_quick_tool() -> void:
 func _select_tool_button(tool: PaintTool) -> void:
 	paint_tool = tool
 	if tool > 0 and tool < _tool_buttons.size():
-		_tool_buttons[tool].button_pressed = true
+		var tool_btn := _tool_buttons[tool]
+		tool_btn.button_pressed = true
+		tool_btn.pressed.emit()
 
 func _on_tileset_changed() -> void:
 	_refresh_terrains.call_deferred()
