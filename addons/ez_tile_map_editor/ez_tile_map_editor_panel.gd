@@ -70,6 +70,10 @@ var drag_erasing: bool = false
 var drag_action_index: int = 0
 var drag_action_count: int = 0
 var plugin: EditorPlugin = null
+var _native_tilemap_editor: Object = null
+var _native_grid_button: BaseButton = null
+var _native_highlight_button: BaseButton = null
+var _syncing_native: bool = false
 
 
 func _ready() -> void:
@@ -384,49 +388,127 @@ func _on_layer_selected(idx: int) -> void:
 
 
 func _on_layer_highlight_toggled(toggled: bool) -> void:
+	if _syncing_native:
+		return
 	_log("_on_layer_highlight_toggled: toggled=%s" % toggled)
 	var settings := EditorInterface.get_editor_settings()
 	settings.set_setting("editors/tiles_editor/highlight_selected_layer", toggled)
 	settings.emit_changed()
-	_toggle_native_button("Highlight Selected TileMap Layer", toggled)
+	_toggle_native("Highlight Selected TileMap Layer", toggled)
 	if plugin and plugin.has_method("_queue_overlay_redraw"):
 		plugin._queue_overlay_redraw()
 	update_overlay.emit()
 
 
 func _on_layer_grid_toggled(toggled: bool) -> void:
+	if _syncing_native:
+		return
 	_log("_on_layer_grid_toggled: toggled=%s" % toggled)
 	var settings := EditorInterface.get_editor_settings()
 	settings.set_setting("editors/tiles_editor/display_grid", toggled)
 	settings.emit_changed()
-	_toggle_native_button("Toggle grid visibility.", toggled)
+	_toggle_native("Toggle grid visibility.", toggled)
 	if plugin and plugin.has_method("_queue_overlay_redraw"):
 		plugin._queue_overlay_redraw()
 	update_overlay.emit()
 
 
-func _toggle_native_button(tooltip: String, pressed: bool) -> void:
-	var editor_base := EditorInterface.get_base_control()
-	_find_and_toggle_button(editor_base, tooltip, pressed)
+func _toggle_native(tooltip: String, pressed: bool) -> void:
+	var editor := _ensure_native_tilemap_editor()
+	if editor:
+		_find_and_toggle_in(editor, tooltip, pressed)
+	else:
+		_log("_toggle_native: TileMapLayerEditor not found, searching from root")
+		_find_and_toggle_in(EditorInterface.get_base_control(), tooltip, pressed)
 
 
-func _find_and_toggle_button(node: Node, tooltip: String, pressed: bool) -> void:
+func _find_and_toggle_in(node: Node, tooltip: String, pressed: bool) -> void:
 	for child in node.get_children():
 		if child is BaseButton:
 			var btn: BaseButton = child
 			if btn.tooltip_text == tooltip:
-				_log("  toggling native button '%s' to %s (was %s)" % [tooltip, pressed, btn.button_pressed])
+				_log("  toggling native '%s' to %s (was %s)" % [tooltip, pressed, btn.button_pressed])
 				btn.set_pressed_no_signal(pressed)
 				btn.toggled.emit(pressed)
+				_connect_native_button(btn, tooltip)
 				return
-		_find_and_toggle_button(child, tooltip, pressed)
+		_find_and_toggle_in(child, tooltip, pressed)
+
+
+func _connect_native_button(btn: BaseButton, tooltip: String) -> void:
+	if tooltip == "Toggle grid visibility.":
+		if _native_grid_button != btn:
+			if _native_grid_button and _native_grid_button.toggled.is_connected(_on_native_grid_toggled):
+				_native_grid_button.toggled.disconnect(_on_native_grid_toggled)
+			_native_grid_button = btn
+			if not btn.toggled.is_connected(_on_native_grid_toggled):
+				btn.toggled.connect(_on_native_grid_toggled)
+				_log("  connected to native grid button toggled")
+	elif tooltip == "Highlight Selected TileMap Layer":
+		if _native_highlight_button != btn:
+			if _native_highlight_button and _native_highlight_button.toggled.is_connected(_on_native_highlight_toggled):
+				_native_highlight_button.toggled.disconnect(_on_native_highlight_toggled)
+			_native_highlight_button = btn
+			if not btn.toggled.is_connected(_on_native_highlight_toggled):
+				btn.toggled.connect(_on_native_highlight_toggled)
+				_log("  connected to native highlight button toggled")
+
+
+func _on_native_grid_toggled(pressed: bool) -> void:
+	if _syncing_native:
+		return
+	_syncing_native = true
+	_log("_on_native_grid_toggled: native grid toggled to %s, syncing" % pressed)
+	layer_grid.set_pressed_no_signal(pressed)
+	var settings := EditorInterface.get_editor_settings()
+	settings.set_setting("editors/tiles_editor/display_grid", pressed)
+	_syncing_native = false
+
+
+func _on_native_highlight_toggled(pressed: bool) -> void:
+	if _syncing_native:
+		return
+	_syncing_native = true
+	_log("_on_native_highlight_toggled: native highlight toggled to %s, syncing" % pressed)
+	layer_highlight.set_pressed_no_signal(pressed)
+	var settings := EditorInterface.get_editor_settings()
+	settings.set_setting("editors/tiles_editor/highlight_selected_layer", pressed)
+	_syncing_native = false
+
+
+func _ensure_native_tilemap_editor() -> Object:
+	if _native_tilemap_editor and is_instance_valid(_native_tilemap_editor):
+		return _native_tilemap_editor
+	var editor_base := EditorInterface.get_base_control()
+	_native_tilemap_editor = _find_tilemap_editor_in_tree(editor_base)
+	if _native_tilemap_editor:
+		_log("_ensure_native_tilemap_editor: found %s (class=%s)" % [_native_tilemap_editor, _native_tilemap_editor.get_class()])
+	return _native_tilemap_editor
+
+
+func _find_tilemap_editor_in_tree(node: Node) -> Object:
+	if node.name == "TileMap" and node.is_class("TileMapLayerEditor"):
+		_log("_find_tilemap_editor_in_tree: found %s" % node)
+		return node
+	for child in node.get_children():
+		var found := _find_tilemap_editor_in_tree(child)
+		if found:
+			return found
+	return null
 
 
 func _find_native_tilemap_buttons() -> void:
-	_log("_find_native_tilemap_buttons: syncing native button states")
+	_log("_find_native_tilemap_buttons: syncing native editor state")
 	var settings := EditorInterface.get_editor_settings()
-	_toggle_native_button("Toggle grid visibility.", settings.get_setting("editors/tiles_editor/display_grid"))
-	_toggle_native_button("Highlight Selected TileMap Layer", settings.get_setting("editors/tiles_editor/highlight_selected_layer"))
+	var editor := _ensure_native_tilemap_editor()
+	if editor:
+		# When the native "TileMap" tab is selected, the TileMapLayerEditor
+		# receives visibility notifications that enable overlay drawing.
+		# Simulate those notifications so the grid/highlight draw even when
+		# our "EZ TileMap" tab is active.
+		editor.notification(NOTIFICATION_VISIBILITY_CHANGED)
+	_toggle_native("Toggle grid visibility.", settings.get_setting("editors/tiles_editor/display_grid"))
+	_toggle_native("Highlight Selected TileMap Layer", settings.get_setting("editors/tiles_editor/highlight_selected_layer"))
 
 
 func about_to_be_visible() -> void:
