@@ -8,6 +8,13 @@ enum DragType { NONE, SELECT, MOVE, CLIPBOARD_PASTE }
 
 const _draw_tools: Array[int] = [PaintTool.DRAW, PaintTool.LINE, PaintTool.RECT, PaintTool.BUCKET]
 
+const COLOR_TRANSPARENT := Color(0, 0, 0, 0)
+const COLOR_SELECTION_OUTLINE := Color(0.3, 0.7, 1.0, 1.0)
+const COLOR_ERASE_OVERLAY := Color(0.0, 0.0, 0.0, 0.35)
+const COLOR_PAINT_OVERLAY := Color(1.0, 1.0, 1.0, 0.35)
+const COLOR_MOVE_PASTE_FALLBACK := Color(1.0, 1.0, 1.0, 0.25)
+var TILE_POLYGON: PackedVector2Array = PackedVector2Array([Vector2(-0.5, -0.5), Vector2(0.5, -0.5), Vector2(0.5, 0.5), Vector2(-0.5, 0.5)])
+
 func _is_draw_tool() -> bool:
 	return paint_tool in _draw_tools
 
@@ -306,7 +313,7 @@ func _on_entry_gui_input(event: InputEvent, panel: PanelContainer, index: int) -
 func _update_entry_style(panel: PanelContainer, selected: bool) -> void:
 	if selected:
 		var style := StyleBoxFlat.new()
-		style.bg_color = Color(0, 0, 0, 0)
+		style.bg_color = COLOR_TRANSPARENT
 		style.border_width_left = 2
 		style.border_width_right = 2
 		style.border_width_top = 2
@@ -319,7 +326,7 @@ func _update_entry_style(panel: PanelContainer, selected: bool) -> void:
 		panel.add_theme_stylebox_override("panel", style)
 	else:
 		var empty_style := StyleBoxFlat.new()
-		empty_style.bg_color = Color(0, 0, 0, 0)
+		empty_style.bg_color = COLOR_TRANSPARENT
 		empty_style.content_margin_left = 0
 		empty_style.content_margin_right = 0
 		empty_style.content_margin_top = 0
@@ -492,17 +499,22 @@ func _get_selected_terrain() -> Dictionary:
 func _save_cells(coords: Array) -> Dictionary:
 	var state := {}
 	for c in coords:
-		var src := tilemap.get_cell_source_id(c)
-		state[c] = {has_cell = src != -1, source_id = src if src != -1 else 0, atlas_coords = tilemap.get_cell_atlas_coords(c) if src != -1 else Vector2i.ZERO, alternative_tile = tilemap.get_cell_alternative_tile(c) if src != -1 else 0}
+		state[c] = _get_cell_state(c)
 	return state
+
+func _get_cell_state(c: Vector2i) -> Dictionary:
+	var src := tilemap.get_cell_source_id(c)
+	return {has_cell = src != -1, source_id = src if src != -1 else 0, atlas_coords = tilemap.get_cell_atlas_coords(c) if src != -1 else Vector2i.ZERO, alternative_tile = tilemap.get_cell_alternative_tile(c) if src != -1 else 0}
+
+func _restore_cell_state(c: Vector2i, state: Dictionary, target: TileMapLayer) -> void:
+	if state.has_cell:
+		target.set_cell(c, state.source_id, state.atlas_coords, state.alternative_tile)
+	else:
+		target.erase_cell(c)
 
 func _restore_cells(saved: Dictionary, tm: TileMapLayer) -> void:
 	for c in saved:
-		var s: Dictionary = saved[c]
-		if s.has_cell:
-			tm.set_cell(c, s.source_id, s.atlas_coords, s.alternative_tile)
-		else:
-			tm.erase_cell(c)
+		_restore_cell_state(c, saved[c], tm)
 
 # ---- CANVAS INPUT ----
 
@@ -796,11 +808,11 @@ func canvas_draw(overlay: Control) -> void:
 						var c := Vector2i(x, y)
 						if tilemap.get_cell_source_id(c) != -1:
 							to_draw[c] = true
-				_draw_cells_outline(to_draw, Color(0.3, 0.7, 1.0, 1.0), overlay)
+				_draw_cells_outline(to_draw, COLOR_SELECTION_OUTLINE, overlay)
 		elif _drag_type == DragType.MOVE and mouse_down:
 			_draw_move_preview(mouse_current - mouse_start, overlay)
 		elif not _selection.is_empty():
-			_draw_cells_outline(_selection, Color(0.3, 0.7, 1.0, 1.0), overlay)
+			_draw_cells_outline(_selection, COLOR_SELECTION_OUTLINE, overlay)
 		return
 
 	if not draw_overlay:
@@ -814,11 +826,11 @@ func canvas_draw(overlay: Control) -> void:
 	if paint_tool == PaintTool.PICK:
 		color = Color(0.2, 0.8, 1.0, 0.35)
 	elif mouse_down and drag_erasing:
-		color = Color(0.0, 0.0, 0.0, 0.35)
+		color = COLOR_ERASE_OVERLAY
 	elif paint_tool == PaintTool.ERASE or selected_index < 0:
-		color = Color(0.0, 0.0, 0.0, 0.35)
+		color = COLOR_ERASE_OVERLAY
 	else:
-		color = Color(1.0, 1.0, 1.0, 0.35)
+		color = COLOR_PAINT_OVERLAY
 	var cells: Array
 	if paint_tool == PaintTool.BUCKET and not mouse_down:
 		cells = _flood_fill(mouse_current)
@@ -828,8 +840,7 @@ func canvas_draw(overlay: Control) -> void:
 		cells = [mouse_current]
 	var transform := _canvas_tilemap_transform()
 	var cell_size := tileset.tile_size
-	const HALF := 0.5
-	var polygon := PackedVector2Array([Vector2(-HALF, -HALF), Vector2(HALF, -HALF), Vector2(HALF, HALF), Vector2(-HALF, HALF)])
+	var polygon := TILE_POLYGON
 	for c in cells:
 		var cell_transform := Transform2D(0.0, cell_size, 0.0, tilemap.map_to_local(c))
 		overlay.draw_colored_polygon(transform * cell_transform * polygon, color)
@@ -1149,7 +1160,7 @@ func _draw_cells_outline(cells: Dictionary, color: Color, overlay: Control) -> v
 func _draw_cells_filled(rect: Rect2i, color: Color, overlay: Control) -> void:
 	var tform := _canvas_tilemap_transform()
 	var cell_size := tileset.tile_size
-	var polygon := PackedVector2Array([Vector2(-0.5, -0.5), Vector2(0.5, -0.5), Vector2(0.5, 0.5), Vector2(-0.5, 0.5)])
+	var polygon := TILE_POLYGON
 	for x in range(rect.position.x, rect.position.x + rect.size.x):
 		for y in range(rect.position.y, rect.position.y + rect.size.y):
 			var cell_transform := Transform2D(0.0, cell_size, 0.0, tilemap.map_to_local(Vector2i(x, y)))
@@ -1159,7 +1170,7 @@ func _draw_move_preview(offset: Vector2i, overlay: Control) -> void:
 	var tform := _canvas_tilemap_transform()
 	var cell_size := tileset.tile_size
 	var half := Vector2(cell_size) / 2.0
-	var polygon := PackedVector2Array([Vector2(-0.5, -0.5), Vector2(0.5, -0.5), Vector2(0.5, 0.5), Vector2(-0.5, 0.5)])
+	var polygon := TILE_POLYGON
 
 	for c in _drag_modified:
 		var dc: Dictionary = _drag_modified[c]
@@ -1173,10 +1184,10 @@ func _draw_move_preview(offset: Vector2i, overlay: Control) -> void:
 			var dest_top_left := tform * (center - half)
 			var dest_bottom_right := tform * (center + half)
 			var dest_rect := Rect2(dest_top_left, dest_bottom_right - dest_top_left)
-			overlay.draw_texture_rect_region(source.texture, dest_rect, region, Color(1.0, 1.0, 1.0, 0.35))
+			overlay.draw_texture_rect_region(source.texture, dest_rect, region, COLOR_PAINT_OVERLAY)
 		else:
 			var cell_transform := Transform2D(0.0, cell_size, 0.0, tilemap.map_to_local(new_cell))
-			overlay.draw_colored_polygon(tform * cell_transform * polygon, Color(1.0, 1.0, 1.0, 0.25))
+			overlay.draw_colored_polygon(tform * cell_transform * polygon, COLOR_MOVE_PASTE_FALLBACK)
 
 func _commit_selection() -> void:
 	var rect := Rect2i(mouse_start, mouse_current - mouse_start).abs()
@@ -1205,22 +1216,14 @@ func _start_move(mouse_pos: Vector2i) -> void:
 	mouse_prev = mouse_pos
 	_drag_modified.clear()
 	for c in _selection:
-		var src := tilemap.get_cell_source_id(c)
-		_drag_modified[c] = {
-			"has_cell": src != -1,
-			"source_id": src if src != -1 else 0,
-			"atlas_coords": tilemap.get_cell_atlas_coords(c) if src != -1 else Vector2i.ZERO,
-			"alternative_tile": tilemap.get_cell_alternative_tile(c) if src != -1 else 0,
-		}
+		_drag_modified[c] = _get_cell_state(c)
 		tilemap.erase_cell(c)
 	draw_overlay = true
 	update_overlay.emit()
 
 func _restore_move_cells() -> void:
 	for c in _drag_modified:
-		var data: Dictionary = _drag_modified[c]
-		if data.has_cell:
-			tilemap.set_cell(c, data.source_id, data.atlas_coords, data.alternative_tile)
+		_restore_cell_state(c, _drag_modified[c], tilemap)
 	_drag_modified.clear()
 
 func _commit_move() -> void:
@@ -1394,13 +1397,7 @@ func _commit_paste() -> void:
 	var saved := {}
 	for coord in used_cells:
 		var world_cell := pattern_pos + coord
-		var src := tilemap.get_cell_source_id(world_cell)
-		saved[world_cell] = {
-			"has_cell": src != -1,
-			"source_id": src if src != -1 else 0,
-			"atlas_coords": tilemap.get_cell_atlas_coords(world_cell) if src != -1 else Vector2i.ZERO,
-			"alternative_tile": tilemap.get_cell_alternative_tile(world_cell) if src != -1 else 0,
-		}
+		saved[world_cell] = _get_cell_state(world_cell)
 
 	undo_manager.create_action("Paste Tiles", UndoRedo.MERGE_DISABLE, tilemap)
 	for coord in used_cells:
@@ -1419,7 +1416,7 @@ func _draw_paste_preview(overlay: Control) -> void:
 	var tform := _canvas_tilemap_transform()
 	var cell_size := tileset.tile_size
 	var half := Vector2(cell_size) / 2.0
-	var polygon := PackedVector2Array([Vector2(-0.5, -0.5), Vector2(0.5, -0.5), Vector2(0.5, 0.5), Vector2(-0.5, 0.5)])
+	var polygon := TILE_POLYGON
 
 	var pattern_pos := _get_paste_origin(_clipboard, mouse_current)
 
@@ -1433,7 +1430,7 @@ func _draw_paste_preview(overlay: Control) -> void:
 			var center := tilemap.map_to_local(world_cell)
 			var top_left := tform * (center - half)
 			var bottom_right := tform * (center + half)
-			overlay.draw_texture_rect_region(source.texture, Rect2(top_left, bottom_right - top_left), region, Color(1, 1, 1, 0.5))
+			overlay.draw_texture_rect_region(source.texture, Rect2(top_left, bottom_right - top_left), region, Color(1.0, 1.0, 1.0, 0.5))
 		else:
 			var cell_transform := Transform2D(0.0, cell_size, 0.0, tilemap.map_to_local(world_cell))
-			overlay.draw_colored_polygon(tform * cell_transform * polygon, Color(1, 1, 1, 0.25))
+			overlay.draw_colored_polygon(tform * cell_transform * polygon, COLOR_MOVE_PASTE_FALLBACK)
