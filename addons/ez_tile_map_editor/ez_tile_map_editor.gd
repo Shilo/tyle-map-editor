@@ -1,5 +1,5 @@
-extends CanvasLayer
 class_name EZTileMapEditor
+extends CanvasLayer
 
 enum ActivationEdge { TOP, BOTTOM, LEFT, RIGHT }
 
@@ -29,44 +29,25 @@ const PANEL_SCENE := preload("res://addons/ez_tile_map_editor/ez_tile_map_editor
 
 @export_range(1, 256, 1, "or_greater") var activation_thickness_px: int = 12
 @export_range(0.0, 2.0, 0.01) var animation_duration: float = 0.15
-@export var start_open: bool = false
-@export var show_close_button: bool = true:
+@export var showing: bool = false:
 	set(value):
-		show_close_button = value
-		if _panel and _panel.has_method("set_close_button_visible"):
-			_panel.set_close_button_visible(show_close_button)
+		_showing = value
+		if is_inside_tree():
+			_apply_showing(value, true)
+	get:
+		return _showing
 
 @export var excluded_controls: Array[NodePath] = []
 @export var excluded_rects: Array[Rect2] = []
 @export var discover_root_path: NodePath
 @export var install_default_input_actions: bool = false
-@export var grid_enabled: bool = true:
-	set(value):
-		grid_enabled = value
-		if _panel:
-			_panel.runtime_grid_enabled = value
-			_queue_overlay_redraw()
-
-@export var layer_highlight_enabled: bool = false:
-	set(value):
-		layer_highlight_enabled = value
-		if _panel:
-			_panel.runtime_layer_highlight_enabled = value
-			_queue_overlay_redraw()
-
-@export var grid_color: Color = Color(1.0, 0.5, 0.2, 0.5):
-	set(value):
-		grid_color = value
-		if _panel:
-			_panel.runtime_grid_color = value
-			_queue_overlay_redraw()
 
 var _split: SplitContainer
 var _game_area: Control
 var _panel: Control
 var _undo_redo := UndoRedo.new()
 var _layers: Array[TileMapLayer] = []
-var _is_open := false
+var _showing := false
 var _hover_armed := true
 var _tween: Tween
 
@@ -88,15 +69,11 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_layout_dock)
 	refresh_layers()
 	_layout_dock()
-
-	if start_open:
-		open(false)
-	else:
-		close(false)
+	_apply_showing(showing, false)
 
 
 func _process(_delta: float) -> void:
-	if not enabled or _is_open:
+	if not enabled or showing:
 		return
 
 	var mouse_pos := get_viewport().get_mouse_position()
@@ -109,7 +86,7 @@ func _process(_delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not enabled or not _is_open or not _panel:
+	if not enabled or not showing or not _panel:
 		return
 	if _panel.canvas_input(event):
 		get_viewport().set_input_as_handled()
@@ -142,22 +119,27 @@ func set_editing_enabled(value: bool) -> void:
 
 
 func open(animated: bool = true) -> void:
-	if not enabled:
-		return
-	_is_open = true
-	_hover_armed = true
-	_layout_dock()
-	if _panel:
-		_panel.about_to_be_visible()
-	_show_split(animated)
+	_apply_showing(true, animated)
 
 
 func close(animated: bool = true) -> void:
-	_is_open = false
+	_apply_showing(false, animated)
+
+
+func _apply_showing(value: bool, animated: bool) -> void:
+	_showing = value
+	if value and not enabled:
+		return
 	_hover_armed = not _is_in_activation_zone(get_viewport().get_mouse_position())
-	if _panel:
+	if value:
+		_hover_armed = true
+		_layout_dock()
+		if _panel:
+			_panel.about_to_be_visible()
+		_show_panel(animated)
+	elif _panel:
 		_panel.canvas_mouse_exited()
-	_hide_split(animated)
+		_hide_panel(animated)
 
 
 func undo() -> void:
@@ -191,9 +173,6 @@ func _build_nodes() -> void:
 	_panel = PANEL_SCENE.instantiate()
 	_panel.runtime_mode = true
 	_panel.undo_manager = _undo_redo
-	_panel.runtime_grid_enabled = grid_enabled
-	_panel.runtime_layer_highlight_enabled = layer_highlight_enabled
-	_panel.runtime_grid_color = grid_color
 	_panel.layer_provider = Callable(self, "_get_layers_for_panel")
 	_panel.layer_selected_callback = Callable(self, "_on_panel_layer_selected")
 	_panel.canvas_transform_provider = Callable(self, "_get_canvas_transform_for_panel")
@@ -204,8 +183,6 @@ func _build_nodes() -> void:
 	_panel.update_overlay.connect(_queue_overlay_redraw)
 	if _panel.has_signal("close_requested"):
 		_panel.close_requested.connect(close)
-	if _panel.has_method("set_close_button_visible"):
-		_panel.set_close_button_visible(show_close_button)
 	_configure_split_children()
 
 
@@ -218,7 +195,7 @@ func _layout_dock() -> void:
 	if _panel:
 		_panel.custom_minimum_size = Vector2.ZERO
 		_apply_panel_size_flags()
-	_split.split_offset = 0
+	_apply_split_offset()
 	_queue_overlay_redraw()
 
 
@@ -241,13 +218,28 @@ func _configure_split_children() -> void:
 
 func _apply_panel_size_flags() -> void:
 	var side_dock := activation_edge == ActivationEdge.LEFT or activation_edge == ActivationEdge.RIGHT
-	_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if side_dock else Control.SIZE_EXPAND_FILL
-	_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL if side_dock else Control.SIZE_SHRINK_BEGIN
+	if side_dock:
+		_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if activation_edge == ActivationEdge.LEFT else Control.SIZE_SHRINK_END
+		_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	else:
+		_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN if activation_edge == ActivationEdge.TOP else Control.SIZE_SHRINK_END
 	_game_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_game_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 
-func _show_split(animated: bool) -> void:
+func _apply_split_offset() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	var panel_min := _panel.get_combined_minimum_size()
+	if _split.vertical:
+		var panel_height := panel_min.y
+		_split.split_offset = int(roundf(panel_height if _panel_should_be_first() else maxf(0.0, viewport_size.y - panel_height)))
+	else:
+		var panel_width := panel_min.x
+		_split.split_offset = int(roundf(panel_width if _panel_should_be_first() else maxf(0.0, viewport_size.x - panel_width)))
+
+
+func _show_panel(animated: bool) -> void:
 	if not _panel:
 		return
 	if _tween:
@@ -261,7 +253,7 @@ func _show_split(animated: bool) -> void:
 	_tween.tween_property(_panel, "modulate:a", 1.0, animation_duration).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
-func _hide_split(animated: bool) -> void:
+func _hide_panel(animated: bool) -> void:
 	if not _panel:
 		return
 	if _tween:
@@ -348,11 +340,11 @@ func _get_viewport_size_for_panel() -> Vector2:
 
 
 func _draw_runtime_overlay(target: Control) -> void:
-	if not enabled or not _is_open or not _panel:
+	if not enabled or not showing or not _panel:
 		return
 	target.draw_set_transform(-target.global_position, 0.0, Vector2.ONE)
 	_panel.canvas_draw(target)
-	if layer_highlight_enabled and _panel.tilemap:
+	if _panel.is_layer_highlight_enabled() and _panel.tilemap:
 		_draw_layer_highlight(target, _panel.tilemap)
 	target.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 

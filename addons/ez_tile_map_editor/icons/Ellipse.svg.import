@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://5hjp6yccxqb4"
-path="res://.godot/imported/Ellipse.svg-78d690ac12bf3a3dc2dc02b2b168b534.ctex"
+uid="uid://dkuxmbgjg8jpt"
+path="res://.godot/imported/ellipse.svg-b107d9b935e2ca34f211afcab2642df1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/ez_tile_map_editor/icons/Ellipse.svg"
-dest_files=["res://.godot/imported/Ellipse.svg-78d690ac12bf3a3dc2dc02b2b168b534.ctex"]
+source_file="res://addons/ez_tile_map_editor/icons/ellipse.svg"
+dest_files=["res://.godot/imported/ellipse.svg-b107d9b935e2ca34f211afcab2642df1.ctex"]
 
 [params]
 

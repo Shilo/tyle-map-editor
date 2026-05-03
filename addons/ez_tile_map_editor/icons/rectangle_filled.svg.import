@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dn47fjk6qduep"
-path="res://.godot/imported/EllipseFilled.svg-85394037991b4c086053a06bc313977a.ctex"
+uid="uid://ypqyaiosux1n"
+path="res://.godot/imported/rectangle_filled.svg-74939efb21991ed527ea32daea543356.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/ez_tile_map_editor/icons/EllipseFilled.svg"
-dest_files=["res://.godot/imported/EllipseFilled.svg-85394037991b4c086053a06bc313977a.ctex"]
+source_file="res://addons/ez_tile_map_editor/icons/rectangle_filled.svg"
+dest_files=["res://.godot/imported/rectangle_filled.svg-74939efb21991ed527ea32daea543356.ctex"]
 
 [params]
 

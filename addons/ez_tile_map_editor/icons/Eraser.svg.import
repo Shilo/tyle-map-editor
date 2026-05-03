@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cdodcjgvf8son"
-path="res://.godot/imported/Eraser.svg-13406ebedf2634e460dfb6914d19c330.ctex"
+uid="uid://c35xua1tnrubs"
+path="res://.godot/imported/eraser.svg-135c7664cdb9e48e54ec8d48f08fde15.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/ez_tile_map_editor/icons/Eraser.svg"
-dest_files=["res://.godot/imported/Eraser.svg-13406ebedf2634e460dfb6914d19c330.ctex"]
+source_file="res://addons/ez_tile_map_editor/icons/eraser.svg"
+dest_files=["res://.godot/imported/eraser.svg-135c7664cdb9e48e54ec8d48f08fde15.ctex"]
 
 [params]
 

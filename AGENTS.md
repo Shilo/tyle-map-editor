@@ -6,7 +6,7 @@ Plugin entry: `addons/ez_tile_map_editor/plugin.cfg`
 Editor plugin: `addons/ez_tile_map_editor/ez_tile_map_editor_plugin.gd`
 Panel UI: `addons/ez_tile_map_editor/ez_tile_map_editor_panel.tscn`
 Panel logic: `addons/ez_tile_map_editor/ez_tile_map_editor_panel.gd`
-Runtime stub: `addons/ez_tile_map_editor/ez_tile_map_editor_runtime.gd`
+Runtime host: `addons/ez_tile_map_editor/ez_tile_map_editor.gd`
 Project config: `project.godot`
 Demo scene: `main.tscn`
 TileSet resource: `tileset.tres`

@@ -2,6 +2,7 @@
 
 [ext_resource type="TileSet" uid="uid://dx0tnr4ohm8ol" path="res://tiles/tileset.tres" id="1_0xm2m"]
 [ext_resource type="Texture2D" uid="uid://02pg1nsnpsb5" path="res://icon.png" id="3_1bvp3"]
+[ext_resource type="Script" path="res://addons/ez_tile_map_editor/ez_tile_map_editor.gd" id="3_h2yge"]
 
 [node name="Node2D" type="Node2D" unique_id=288796910]
 
@@ -47,3 +48,6 @@ format = 2
 [node name="Icon" type="Sprite2D" parent="." unique_id=860159733]
 scale = Vector2(0.2, 0.2)
 texture = ExtResource("3_1bvp3")
+
+[node name="EZTileMapEditor" type="CanvasLayer" parent="." unique_id=1073462066]
+script = ExtResource("3_h2yge")

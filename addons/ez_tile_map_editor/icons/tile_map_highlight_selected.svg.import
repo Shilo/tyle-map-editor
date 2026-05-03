@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c5wswn78yrv1t"
-path="res://.godot/imported/ToolSelect.svg-7ab6b8c771472141ace96992c67d85a1.ctex"
+uid="uid://cv2udo6svamu0"
+path="res://.godot/imported/tile_map_highlight_selected.svg-81f729e5ddd976c066ff6bdf7232bc80.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/ez_tile_map_editor/icons/ToolSelect.svg"
-dest_files=["res://.godot/imported/ToolSelect.svg-7ab6b8c771472141ace96992c67d85a1.ctex"]
+source_file="res://addons/ez_tile_map_editor/icons/tile_map_highlight_selected.svg"
+dest_files=["res://.godot/imported/tile_map_highlight_selected.svg-81f729e5ddd976c066ff6bdf7232bc80.ctex"]
 
 [params]
 

@@ -14,6 +14,16 @@ const COLOR_SELECTION_OUTLINE := Color(0.3, 0.7, 1.0, 1.0)
 const COLOR_ERASE_OVERLAY := Color(0.0, 0.0, 0.0, 0.35)
 const COLOR_PAINT_OVERLAY := Color(1.0, 1.0, 1.0, 0.35)
 const COLOR_MOVE_PASTE_FALLBACK := Color(1.0, 1.0, 1.0, 0.25)
+const RUNTIME_GRID_COLOR := Color(1.0, 0.5, 0.2, 0.5)
+const RUNTIME_SETTINGS_PATH := "user://ez_tile_map_editor.cfg"
+const RUNTIME_SETTINGS_SECTION := "panel"
+const RUNTIME_GRID_KEY := "grid_enabled"
+const RUNTIME_LAYER_HIGHLIGHT_KEY := "layer_highlight_enabled"
+
+static var _runtime_settings_loaded: bool = false
+static var _runtime_grid_enabled: bool = true
+static var _runtime_layer_highlight_enabled: bool = false
+
 var TILE_POLYGON: PackedVector2Array = PackedVector2Array([Vector2(-0.5, -0.5), Vector2(0.5, -0.5), Vector2(0.5, 0.5), Vector2(-0.5, 0.5)])
 
 func _is_draw_tool() -> bool:
@@ -33,6 +43,7 @@ func _is_draw_tool() -> bool:
 @onready var layer_select: OptionButton = %LayerSelect
 @onready var close_button: Button = %CloseButton
 
+@onready var layout_root: VBoxContainer = $VBoxContainer
 @onready var terrain_grid: HFlowContainer = %TerrainGrid
 @onready var scroll_container: ScrollContainer = %TerrainScroll
 @onready var empty_label: Label = %EmptyLabel
@@ -66,9 +77,6 @@ var tileset: TileSet = null:
 
 var undo_manager: Object
 var runtime_mode: bool = false
-var runtime_grid_enabled: bool = true
-var runtime_layer_highlight_enabled: bool = false
-var runtime_grid_color: Color = Color(1.0, 0.5, 0.2, 0.5)
 var layer_provider: Callable
 var layer_selected_callback: Callable
 var canvas_transform_provider: Callable
@@ -133,9 +141,10 @@ func _ready() -> void:
 	_on_tool_toggled(false)
 	call_deferred("_update_responsive_layout")
 
-func set_close_button_visible(value: bool) -> void:
-	if close_button:
-		close_button.visible = value
+func _get_minimum_size() -> Vector2:
+	if layout_root:
+		return layout_root.get_combined_minimum_size()
+	return Vector2.ZERO
 
 func _on_close_pressed() -> void:
 	close_requested.emit()
@@ -555,7 +564,9 @@ func _on_layer_highlight_toggled(toggled: bool) -> void:
 		return
 
 	if runtime_mode:
-		runtime_layer_highlight_enabled = toggled
+		_ensure_runtime_settings_loaded()
+		_runtime_layer_highlight_enabled = toggled
+		_save_runtime_settings()
 		update_overlay.emit()
 		return
 
@@ -574,7 +585,9 @@ func _on_layer_grid_toggled(toggled: bool) -> void:
 		return
 
 	if runtime_mode:
-		runtime_grid_enabled = toggled
+		_ensure_runtime_settings_loaded()
+		_runtime_grid_enabled = toggled
+		_save_runtime_settings()
 		update_overlay.emit()
 		return
 
@@ -673,8 +686,9 @@ func about_to_be_visible() -> void:
 	if tilemap and tileset != tilemap.tile_set:
 		tileset = tilemap.tile_set
 	if runtime_mode:
-		layer_highlight.set_pressed_no_signal(runtime_layer_highlight_enabled)
-		layer_grid.set_pressed_no_signal(runtime_grid_enabled)
+		_ensure_runtime_settings_loaded()
+		layer_highlight.set_pressed_no_signal(_runtime_layer_highlight_enabled)
+		layer_grid.set_pressed_no_signal(_runtime_grid_enabled)
 		_update_empty_state()
 		return
 	var settings := _get_editor_settings()
@@ -687,6 +701,31 @@ func about_to_be_visible() -> void:
 	layer_highlight.set_pressed_no_signal(hl)
 	layer_grid.set_pressed_no_signal(grid)
 	_update_empty_state()
+
+func is_layer_highlight_enabled() -> bool:
+	if runtime_mode:
+		_ensure_runtime_settings_loaded()
+		return _runtime_layer_highlight_enabled
+	var settings := _get_editor_settings()
+	if settings:
+		return settings.get_setting("editors/tiles_editor/highlight_selected_layer")
+	return false
+
+func _ensure_runtime_settings_loaded() -> void:
+	if _runtime_settings_loaded:
+		return
+	_runtime_settings_loaded = true
+	var config := ConfigFile.new()
+	if config.load(RUNTIME_SETTINGS_PATH) != OK:
+		return
+	_runtime_grid_enabled = bool(config.get_value(RUNTIME_SETTINGS_SECTION, RUNTIME_GRID_KEY, _runtime_grid_enabled))
+	_runtime_layer_highlight_enabled = bool(config.get_value(RUNTIME_SETTINGS_SECTION, RUNTIME_LAYER_HIGHLIGHT_KEY, _runtime_layer_highlight_enabled))
+
+func _save_runtime_settings() -> void:
+	var config := ConfigFile.new()
+	config.set_value(RUNTIME_SETTINGS_SECTION, RUNTIME_GRID_KEY, _runtime_grid_enabled)
+	config.set_value(RUNTIME_SETTINGS_SECTION, RUNTIME_LAYER_HIGHLIGHT_KEY, _runtime_layer_highlight_enabled)
+	config.save(RUNTIME_SETTINGS_PATH)
 
 func _get_editor_interface() -> Object:
 	if not Engine.is_editor_hint():
@@ -1114,14 +1153,17 @@ func canvas_draw(overlay: Control) -> void:
 		overlay.draw_colored_polygon(transform * cell_transform * polygon, color)
 
 func _draw_our_grid(overlay: Control) -> void:
-	var grid_enabled := runtime_grid_enabled
-	var grid_color := runtime_grid_color
+	var grid_enabled := _runtime_grid_enabled
+	var grid_color := RUNTIME_GRID_COLOR
 	if not runtime_mode:
 		var settings := _get_editor_settings()
 		if not settings:
 			return
 		grid_enabled = settings.get_setting("editors/tiles_editor/display_grid")
 		grid_color = settings.get_setting("editors/tiles_editor/grid_color")
+	else:
+		_ensure_runtime_settings_loaded()
+		grid_enabled = _runtime_grid_enabled
 	if not grid_enabled:
 		return
 

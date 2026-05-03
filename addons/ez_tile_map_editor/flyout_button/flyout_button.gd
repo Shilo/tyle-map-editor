@@ -7,8 +7,6 @@ signal item_selected(index: int)
 enum PopupDirection { RIGHT, LEFT, UP, DOWN }
 enum ContentDirection { HORIZONTAL, VERTICAL }
 
-const EDITOR_ICONS_TYPE := &"EditorIcons"
-
 @export var popup_direction := PopupDirection.DOWN
 @export var content_direction := ContentDirection.VERTICAL
 
@@ -294,31 +292,6 @@ func _resolve_icon(item: FlyoutButtonItem) -> Texture2D:
 		return null
 	if item.icon != null:
 		return item.icon
-	if item.editor_icon != &"":
-		return _get_editor_icon(item.editor_icon)
-	return null
-
-
-func _get_editor_icon(icon_name: StringName) -> Texture2D:
-	if not Engine.is_editor_hint():
-		return null
-	if not Engine.has_singleton(&"EditorInterface"):
-		return null
-
-	var editor_interface := Engine.get_singleton(&"EditorInterface")
-	if editor_interface == null:
-		return null
-
-	if editor_interface.has_method("get_editor_theme"):
-		var editor_theme := editor_interface.call("get_editor_theme") as Theme
-		if editor_theme != null and editor_theme.has_icon(icon_name, EDITOR_ICONS_TYPE):
-			return editor_theme.get_icon(icon_name, EDITOR_ICONS_TYPE)
-
-	if editor_interface.has_method("get_base_control"):
-		var base_control := editor_interface.call("get_base_control") as Control
-		if base_control != null and base_control.has_theme_icon(icon_name, EDITOR_ICONS_TYPE):
-			return base_control.get_theme_icon(icon_name, EDITOR_ICONS_TYPE)
-
 	return null
 
 
