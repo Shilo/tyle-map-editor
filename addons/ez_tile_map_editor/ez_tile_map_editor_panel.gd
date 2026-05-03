@@ -47,6 +47,7 @@ func _is_draw_tool() -> bool:
 @onready var layer_highlight: Button = %LayerHighlight
 @onready var layer_grid: Button = %LayerGrid
 @onready var layer_select: OptionButton = %LayerSelect
+@onready var title_label: Label = %RuntimeTitle
 @onready var more_button: MenuButton = %MoreButton
 @onready var close_button: Button = %CloseButton
 
@@ -93,6 +94,10 @@ var runtime_dock_edge: int = DOCK_EDGE_BOTTOM:
 	set(value):
 		runtime_dock_edge = clampi(value, DOCK_EDGE_TOP, DOCK_EDGE_RIGHT)
 		_update_more_menu_checks()
+var runtime_title: String = "":
+	set(value):
+		runtime_title = value
+		update_runtime_title()
 
 var flattened_terrains: Array[Dictionary] = []
 var selected_index: int = -1
@@ -128,6 +133,7 @@ func _ready() -> void:
 
 	_setup_tooltips()
 	_setup_more_menu()
+	update_runtime_title()
 
 	visibility_changed.connect(_on_visibility_changed)
 	resized.connect(_update_responsive_layout)
@@ -162,6 +168,13 @@ func _get_minimum_size() -> Vector2:
 
 func _on_close_pressed() -> void:
 	close_requested.emit()
+
+func update_runtime_title() -> void:
+	if not title_label:
+		return
+	var show_runtime_title := runtime_mode and not runtime_title.is_empty()
+	title_label.visible = show_runtime_title
+	title_label.text = runtime_title
 
 func _update_responsive_layout() -> void:
 	var narrow := size.x > 0.0 and size.y > 0.0 and size.x < size.y
@@ -736,6 +749,7 @@ func about_to_be_visible() -> void:
 	if runtime_mode:
 		_ensure_runtime_settings_loaded()
 		more_button.visible = true
+		update_runtime_title()
 		layer_highlight.set_pressed_no_signal(_runtime_layer_highlight_enabled)
 		layer_grid.set_pressed_no_signal(_runtime_grid_enabled)
 		_update_runtime_toggle_visuals()

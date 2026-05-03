@@ -41,7 +41,7 @@ const _MAX_CAMERA_ZOOM := 64.0
 			_save_runtime_settings()
 
 @export_range(1, 256, 1, "or_greater") var activation_thickness_px: int = 12
-@export_range(0.0, 2.0, 0.01) var animation_duration: float = 0.15
+@export_range(0.0, 2.0, 0.01) var animation_duration: float = 0.2
 @export var showing: bool = false:
 	set(value):
 		_showing = value
@@ -54,15 +54,20 @@ const _MAX_CAMERA_ZOOM := 64.0
 @export var excluded_rects: Array[Rect2] = []
 @export var discover_root_path: NodePath
 @export var install_default_input_actions: bool = false
-@export var allow_viewport_navigation: bool = false:
+@export var viewport_navigation: bool = true:
 	set(value):
-		allow_viewport_navigation = value
+		viewport_navigation = value
 		if not is_inside_tree():
 			return
-		if allow_viewport_navigation and showing:
+		if viewport_navigation and showing:
 			_activate_navigation_camera()
 		else:
 			_deactivate_navigation_camera()
+@export var title: String = "":
+	set(value):
+		title = value
+		if is_inside_tree():
+			_sync_panel_title()
 
 var _split: SplitContainer
 var _game_area: Control
@@ -79,6 +84,7 @@ var _loading_runtime_settings := false
 var _navigation_camera: Camera2D
 var _previous_camera: Camera2D
 var _navigation_panning := false
+var _navigation_cursor_active := false
 var _showing := false
 var _hover_armed := true
 var _tween: Tween
@@ -177,13 +183,14 @@ func _apply_showing(value: bool, animated: bool) -> void:
 		if _panel:
 			_panel.about_to_be_visible()
 		_layout_dock()
-		if allow_viewport_navigation:
+		if viewport_navigation:
 			_activate_navigation_camera()
 		_apply_runtime_layer_highlighting()
 		_show_panel(animated)
 	elif _panel:
 		_panel.canvas_mouse_exited()
 		_navigation_panning = false
+		_set_navigation_drag_cursor(false)
 		_deactivate_navigation_camera()
 		_clear_runtime_layer_highlighting()
 		_hide_panel(animated)
@@ -245,6 +252,7 @@ func _build_nodes() -> void:
 	_panel.viewport_size_provider = Callable(self, "_get_viewport_size_for_panel")
 	_panel.runtime_highlight_changed_callback = Callable(self, "_apply_runtime_layer_highlighting")
 	_panel.runtime_dock_edge = int(activation_edge)
+	_panel.runtime_title = title
 	_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -257,6 +265,7 @@ func _build_nodes() -> void:
 	_configure_split_children()
 	call_deferred("_configure_split_drag_areas")
 	call_deferred("_sync_panel_size_to_container")
+	call_deferred("_sync_panel_title")
 	call_deferred("_layout_dock")
 
 
@@ -506,6 +515,14 @@ func _sync_panel_dock_edge() -> void:
 		_panel.runtime_dock_edge = int(activation_edge)
 
 
+func _sync_panel_title() -> void:
+	if not _panel:
+		return
+	_panel.runtime_title = title
+	if _panel.has_method("update_runtime_title"):
+		_panel.update_runtime_title()
+
+
 func _load_runtime_settings() -> void:
 	if _runtime_settings_loaded:
 		return
@@ -688,7 +705,7 @@ func _get_navigation_camera_parent() -> Node:
 
 
 func _handle_viewport_navigation_input(event: InputEvent) -> bool:
-	if not allow_viewport_navigation:
+	if not viewport_navigation:
 		return false
 	if not _navigation_camera or not is_instance_valid(_navigation_camera):
 		_activate_navigation_camera()
@@ -697,6 +714,7 @@ func _handle_viewport_navigation_input(event: InputEvent) -> bool:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_MIDDLE:
 			_navigation_panning = event.pressed
+			_set_navigation_drag_cursor(_navigation_panning)
 			return true
 		if event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
 			_zoom_navigation_camera(event.position, event.button_index == MOUSE_BUTTON_WHEEL_UP)
@@ -705,6 +723,16 @@ func _handle_viewport_navigation_input(event: InputEvent) -> bool:
 		_navigation_camera.global_position -= event.relative / _navigation_camera.zoom
 		return true
 	return false
+
+
+func _set_navigation_drag_cursor(active: bool) -> void:
+	if active == _navigation_cursor_active:
+		return
+	_navigation_cursor_active = active
+	if active:
+		Input.set_default_cursor_shape(Input.CURSOR_DRAG)
+	else:
+		Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 
 
 func _zoom_navigation_camera(screen_position: Vector2, zoom_in: bool) -> void:
