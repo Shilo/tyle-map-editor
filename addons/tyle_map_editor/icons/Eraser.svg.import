@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dkuxmbgjg8jpt"
-path="res://.godot/imported/ellipse.svg-b107d9b935e2ca34f211afcab2642df1.ctex"
+uid="uid://c35xua1tnrubs"
+path="res://.godot/imported/eraser.svg-eaf2a21ebc038e28048e3519d1b3035d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/ez_tile_map_editor/icons/ellipse.svg"
-dest_files=["res://.godot/imported/ellipse.svg-b107d9b935e2ca34f211afcab2642df1.ctex"]
+source_file="res://addons/tyle_map_editor/icons/eraser.svg"
+dest_files=["res://.godot/imported/eraser.svg-eaf2a21ebc038e28048e3519d1b3035d.ctex"]
 
 [params]
 

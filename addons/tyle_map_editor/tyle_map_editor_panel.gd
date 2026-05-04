@@ -17,7 +17,7 @@ const COLOR_PAINT_OVERLAY := Color(1.0, 1.0, 1.0, 0.35)
 const COLOR_MOVE_PASTE_FALLBACK := Color(1.0, 1.0, 1.0, 0.25)
 const RUNTIME_GRID_COLOR := Color(1.0, 0.5, 0.2, 0.5)
 const TERRAIN_ENTRY_SIZE := Vector2(72, 72)
-const RUNTIME_SETTINGS_PATH := "user://ez_tile_map_editor.cfg"
+const RUNTIME_SETTINGS_PATH := "user://tyle_map_editor.cfg"
 const RUNTIME_SETTINGS_SECTION := "panel"
 const RUNTIME_GRID_KEY := "grid_enabled"
 const RUNTIME_LAYER_HIGHLIGHT_KEY := "layer_highlight_enabled"
@@ -205,39 +205,39 @@ func _on_visibility_changed() -> void:
 
 func _setup_tooltips() -> void:
 	draw_button.tooltip_text = _make_tooltip_text({
-		"Draw tile": &"ez_tile_draw"
+		"Draw tile": &"tyle_draw"
 	})
 	rect_button.tooltip_text = _make_tooltip_text({
-		"Rectangle": &"ez_tile_rect",
+		"Rectangle": &"tyle_rect",
 		"Quick rectangle": "Shift"
 	})
 	line_button.tooltip_text = _make_tooltip_text({
-		"Line": &"ez_tile_line",
+		"Line": &"tyle_line",
 		"Quick line": "Ctrl"
 	})
 	fill_button.tooltip_text = _make_tooltip_text({
-		"Flood fill": &"ez_tile_fill"
+		"Flood fill": &"tyle_fill"
 	})
 	pick_button.tooltip_text = _make_tooltip_text({
-		"Pick tile": &"ez_tile_pick",
+		"Pick tile": &"tyle_pick",
 		"Quick pick": "Alt"
 	})
 	select_button.tooltip_text = _make_tooltip_text({
-		"Select tiles": &"ez_tile_select",
+		"Select tiles": &"tyle_select",
 		"Add": "Shift",
 		"Subtract": "Ctrl",
 		"Move": "Click+Drag",
 		"Cut, Copy, Paste": "Ctrl+X/C/V"
 	})
 	erase_button.tooltip_text = _make_tooltip_text({
-		"Erase tile": &"ez_tile_erase",
+		"Erase tile": &"tyle_erase",
 		"Quick erase": "Right click"
 	})
 	erase_all_button.tooltip_text = "Erase all tiles on selected tile map layer"
 	layer_highlight.tooltip_text = "Highlight selected tile map layer"
 	layer_grid.tooltip_text = "Toggle grid visibility"
 	more_button.tooltip_text = "Runtime dock options"
-	close_button.tooltip_text = "Close EZ TileMap panel"
+	close_button.tooltip_text = "Close Tyle panel"
 
 func _setup_more_menu() -> void:
 	more_button.visible = runtime_mode
@@ -1748,25 +1748,25 @@ func _handle_key_event(event: InputEventKey) -> bool:
 		return false
 
 	# Action-based tool switching (supports InputMap remapping)
-	if event.is_action_pressed("ez_tile_draw"):
+	if event.is_action_pressed("tyle_draw"):
 		_select_tool_button(PaintTool.DRAW)
 		return true
-	if event.is_action_pressed("ez_tile_rect"):
+	if event.is_action_pressed("tyle_rect"):
 		_select_tool_button(PaintTool.RECT)
 		return true
-	if event.is_action_pressed("ez_tile_line"):
+	if event.is_action_pressed("tyle_line"):
 		_select_tool_button(PaintTool.LINE)
 		return true
-	if event.is_action_pressed("ez_tile_fill"):
+	if event.is_action_pressed("tyle_fill"):
 		_select_tool_button(PaintTool.BUCKET)
 		return true
-	if event.is_action_pressed("ez_tile_select"):
+	if event.is_action_pressed("tyle_select"):
 		_select_tool_button(PaintTool.SEL)
 		return true
-	if event.is_action_pressed("ez_tile_pick"):
+	if event.is_action_pressed("tyle_pick"):
 		_select_tool_button(PaintTool.PICK)
 		return true
-	if event.is_action_pressed("ez_tile_erase"):
+	if event.is_action_pressed("tyle_erase"):
 		_select_tool_button(PaintTool.ERASE)
 		return true
 

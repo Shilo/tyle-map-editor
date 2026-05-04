@@ -1,7 +1,7 @@
-extends "res://addons/ez_tile_map_editor/ez_tile_map_editor.gd"
+extends "res://addons/tyle_map_editor/tyle_map_editor.gd"
 
 # Compatibility wrapper for scenes or editor state that still reference the
-# original runtime host path. The implementation lives in ez_tile_map_editor.gd.
+# original runtime host path. The implementation lives in tyle_map_editor.gd.
 
 @export var start_open: bool = false:
 	set(value):

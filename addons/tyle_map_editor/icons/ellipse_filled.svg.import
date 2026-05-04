@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c5wswn78yrv1t"
-path="res://.godot/imported/tool_select.svg-5e7412f9dccf847361c07a36c77b7b16.ctex"
+uid="uid://dn47fjk6qduep"
+path="res://.godot/imported/ellipse_filled.svg-0681ffbd01fb9c222c643be61912e942.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/ez_tile_map_editor/icons/tool_select.svg"
-dest_files=["res://.godot/imported/tool_select.svg-5e7412f9dccf847361c07a36c77b7b16.ctex"]
+source_file="res://addons/tyle_map_editor/icons/ellipse_filled.svg"
+dest_files=["res://.godot/imported/ellipse_filled.svg-0681ffbd01fb9c222c643be61912e942.ctex"]
 
 [params]
 

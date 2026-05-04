@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cucf3s03dmrgk"
-path="res://.godot/imported/gui_tab_menu_hl_dark_background.svg-c1715800180dcd76642732bbda333f0b.ctex"
+uid="uid://bmh5to3jhp44y"
+path="res://.godot/imported/rectangle.svg-590b778107c3a7ddab404842e7cbc5e3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/ez_tile_map_editor/icons/gui_tab_menu_hl_dark_background.svg"
-dest_files=["res://.godot/imported/gui_tab_menu_hl_dark_background.svg-c1715800180dcd76642732bbda333f0b.ctex"]
+source_file="res://addons/tyle_map_editor/icons/rectangle.svg"
+dest_files=["res://.godot/imported/rectangle.svg-590b778107c3a7ddab404842e7cbc5e3.ctex"]
 
 [params]
 

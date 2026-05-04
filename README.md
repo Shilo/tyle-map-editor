@@ -1,4 +1,6 @@
-# EZ Tile Map Editor
+# Tyle Map Editor
+
+> **Y not map faster?**
 
 A Godot 4.6 editor plugin that makes **terrain painting** on `TileMapLayer` nodes intuitive and fast — pick a terrain, choose a tool, and paint directly in the 2D viewport. Replaces the less user-friendly native TileSet bottom panel workflow with a focused, always-visible toolbar and terrain grid.
 
@@ -78,12 +80,12 @@ A real-time preview is drawn over the 2D viewport while editing:
 
 ## Installation
 
-1. Copy the `addons/ez_tile_map_editor/` folder into your Godot project's `addons/` directory
+1. Copy the `addons/tyle_map_editor/` folder into your Godot project's `addons/` directory
 2. Open your project in the Godot editor
 3. Go to **Project → Project Settings → Plugins**
-4. Find **EZ Tile Map Editor** and check **Enable**
+4. Find **Tyle Map Editor** and check **Enable**
 
-The plugin adds an **EZ TileMap** tab to the bottom panel.
+The plugin adds a **Tyle** tab to the bottom panel.
 
 ---
 
@@ -98,7 +100,7 @@ Your `TileSet` must have:
 
 ### Painting Workflow
 1. Open the **TileSet** bottom panel and configure your terrain sets with peering bits
-2. Click the **EZ TileMap** tab in the bottom panel
+2. Click the **Tyle** tab in the bottom panel
 3. Select a `TileMapLayer` node in the scene tree (or use the layer dropdown in the toolbar)
 4. Click a terrain icon from the terrain grid to select it
 5. Choose a paint tool — press `D` for Draw, or click a tool button
@@ -144,7 +146,7 @@ Your `TileSet` must have:
 The plugin registers input actions in Godot's Input Map. To change key bindings:
 
 1. Go to **Project → Project Settings → Input Map**
-2. Search for `ez_tile_` to find all plugin tool shortcuts
+2. Search for `tyle_` to find all plugin tool shortcuts
 3. Click an action and assign a new key
 
 > Clipboard shortcuts (`Ctrl+C`, `Ctrl+X`, `Ctrl+V`) and `Esc` to cancel paste are hardcoded editor shortcuts and cannot be changed via the Input Map.
@@ -161,7 +163,7 @@ The plugin registers input actions in Godot's Input Map. To change key bindings:
 
 ## License
 
-This project is provided as-is. See `addons/ez_tile_map_editor/plugin.cfg` for author and version info.
+This project is provided as-is. See `addons/tyle_map_editor/plugin.cfg` for author and version info.
 
 ---
 

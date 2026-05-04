@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ypqyaiosux1n"
-path="res://.godot/imported/rectangle_filled.svg-74939efb21991ed527ea32daea543356.ctex"
+uid="uid://c5wswn78yrv1t"
+path="res://.godot/imported/tool_select.svg-76266c652f4fca669b7182824a815801.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/ez_tile_map_editor/icons/rectangle_filled.svg"
-dest_files=["res://.godot/imported/rectangle_filled.svg-74939efb21991ed527ea32daea543356.ctex"]
+source_file="res://addons/tyle_map_editor/icons/tool_select.svg"
+dest_files=["res://.godot/imported/tool_select.svg-76266c652f4fca669b7182824a815801.ctex"]
 
 [params]
 

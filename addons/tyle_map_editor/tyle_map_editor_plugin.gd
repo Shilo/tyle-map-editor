@@ -8,20 +8,20 @@ var _overlay: Control
 
 
 const DEFAULT_INPUT_BINDINGS := {
-	"ez_tile_select": KEY_S,
-	"ez_tile_draw": KEY_D,
-	"ez_tile_line": KEY_L,
-	"ez_tile_rect": KEY_R,
-	"ez_tile_fill": KEY_B,
-	"ez_tile_pick": KEY_P,
-	"ez_tile_erase": KEY_E,
+	"tyle_select": KEY_S,
+	"tyle_draw": KEY_D,
+	"tyle_line": KEY_L,
+	"tyle_rect": KEY_R,
+	"tyle_fill": KEY_B,
+	"tyle_pick": KEY_P,
+	"tyle_erase": KEY_E,
 }
 
 func _enter_tree() -> void:
 	_setup_input_actions()
-	_panel = preload("res://addons/ez_tile_map_editor/ez_tile_map_editor_panel.tscn").instantiate()
+	_panel = preload("res://addons/tyle_map_editor/tyle_map_editor_panel.tscn").instantiate()
 	_panel.plugin = self
-	_button = add_control_to_bottom_panel(_panel, "EZ TileMap")
+	_button = add_control_to_bottom_panel(_panel, "Tyle")
 	_button.visible = false
 
 	_panel.undo_manager = get_undo_redo()

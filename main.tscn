@@ -2,11 +2,11 @@
 
 [ext_resource type="TileSet" uid="uid://dx0tnr4ohm8ol" path="res://tiles/tileset.tres" id="1_0xm2m"]
 [ext_resource type="Texture2D" uid="uid://02pg1nsnpsb5" path="res://icon.png" id="3_1bvp3"]
-[ext_resource type="Script" uid="uid://1sd7nompt364" path="res://addons/ez_tile_map_editor/ez_tile_map_editor.gd" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://1sd7nompt364" path="res://addons/tyle_map_editor/tyle_map_editor.gd" id="3_h2yge"]
 
 [node name="Node2D" type="Node2D" unique_id=288796910]
 
-[node name="EZTileMapEditor" type="CanvasLayer" parent="." unique_id=1073462066]
+[node name="TyleMapEditor" type="CanvasLayer" parent="." unique_id=1073462066]
 script = ExtResource("3_h2yge")
 
 [node name="Background" type="TileMapLayer" parent="." unique_id=1614732146]

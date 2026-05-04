@@ -1,28 +1,28 @@
 [gd_scene format=3 uid="uid://1bhkbncfojmv"]
 
-[ext_resource type="Script" uid="uid://d4bsm0kh3eusm" path="res://addons/ez_tile_map_editor/ez_tile_map_editor_panel.gd" id="1_panel"]
-[ext_resource type="Script" uid="uid://lpes8eqyfvqg" path="res://addons/ez_tile_map_editor/flyout_button/flyout_button.gd" id="2_3361d"]
-[ext_resource type="Script" uid="uid://dd6qdiv3n7xrg" path="res://addons/ez_tile_map_editor/flyout_button/flyout_button_item.gd" id="3_mhpx5"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/rectangle.svg" id="4_yw7vp"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/rectangle_filled.svg" id="5_mssda"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/ellipse_filled.svg" id="6_mj8ra"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/ellipse.svg" id="7_civ1p"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/edit.svg" id="8_edit"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/line.svg" id="9_line"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/bucket.svg" id="10_bucket"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/tool_select.svg" id="11_select"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/color_pick.svg" id="12_pick"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/eraser.svg" id="13_erase"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/clear.svg" id="14_clear"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/tile_map_highlight_selected.svg" id="15_highlight"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/grid.svg" id="16_grid"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/close.svg" id="17_close"]
-[ext_resource type="Texture2D" path="res://addons/ez_tile_map_editor/icons/gui_tab_menu_hl_dark_background.svg" id="18_more"]
+[ext_resource type="Script" uid="uid://d4bsm0kh3eusm" path="res://addons/tyle_map_editor/tyle_map_editor_panel.gd" id="1_panel"]
+[ext_resource type="Script" uid="uid://lpes8eqyfvqg" path="res://addons/tyle_map_editor/flyout_button/flyout_button.gd" id="2_3361d"]
+[ext_resource type="Script" uid="uid://dd6qdiv3n7xrg" path="res://addons/tyle_map_editor/flyout_button/flyout_button_item.gd" id="3_mhpx5"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/rectangle.svg" id="4_yw7vp"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/rectangle_filled.svg" id="5_mssda"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/ellipse_filled.svg" id="6_mj8ra"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/ellipse.svg" id="7_civ1p"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/edit.svg" id="8_edit"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/line.svg" id="9_line"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/bucket.svg" id="10_bucket"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/tool_select.svg" id="11_select"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/color_pick.svg" id="12_pick"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/eraser.svg" id="13_erase"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/clear.svg" id="14_clear"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/tile_map_highlight_selected.svg" id="15_highlight"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/grid.svg" id="16_grid"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/close.svg" id="17_close"]
+[ext_resource type="Texture2D" path="res://addons/tyle_map_editor/icons/gui_tab_menu_hl_dark_background.svg" id="18_more"]
 
 [sub_resource type="ButtonGroup" id="draw_group"]
 
 [sub_resource type="InputEventAction" id="action_draw"]
-action = &"ez_tile_draw"
+action = &"tyle_draw"
 
 [sub_resource type="Shortcut" id="shortcut_draw"]
 resource_name = "Draw Tool"
@@ -53,41 +53,41 @@ icon = ExtResource("7_civ1p")
 metadata/_custom_type_script = "uid://dd6qdiv3n7xrg"
 
 [sub_resource type="InputEventAction" id="action_line"]
-action = &"ez_tile_line"
+action = &"tyle_line"
 
 [sub_resource type="Shortcut" id="shortcut_line"]
 resource_name = "Line Tool"
 events = [SubResource("action_line")]
 
 [sub_resource type="InputEventAction" id="action_fill"]
-action = &"ez_tile_fill"
+action = &"tyle_fill"
 
 [sub_resource type="Shortcut" id="shortcut_fill"]
 resource_name = "Bucket Fill Tool"
 events = [SubResource("action_fill")]
 
 [sub_resource type="InputEventAction" id="action_select"]
-action = &"ez_tile_select"
+action = &"tyle_select"
 
 [sub_resource type="Shortcut" id="shortcut_select"]
 resource_name = "Selection Tool"
 events = [SubResource("action_select")]
 
 [sub_resource type="InputEventAction" id="action_pick"]
-action = &"ez_tile_pick"
+action = &"tyle_pick"
 
 [sub_resource type="Shortcut" id="shortcut_pick"]
 resource_name = "Picker Tool"
 events = [SubResource("action_pick")]
 
 [sub_resource type="InputEventAction" id="action_erase"]
-action = &"ez_tile_erase"
+action = &"tyle_erase"
 
 [sub_resource type="Shortcut" id="shortcut_erase"]
 resource_name = "Eraser Tool"
 events = [SubResource("action_erase")]
 
-[node name="EZTileMapEditorPanel" type="Control" unique_id=458619934]
+[node name="TyleMapEditorPanel" type="Control" unique_id=458619934]
 clip_contents = true
 layout_mode = 3
 anchors_preset = 15
@@ -117,7 +117,7 @@ visible = false
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 size_flags_horizontal = 0
-text = "EZ TileMap"
+text = "Tyle"
 vertical_alignment = 1
 
 [node name="Draw" type="Button" parent="VBoxContainer/Toolbar" unique_id=1129836330]
@@ -267,7 +267,7 @@ flat = true
 unique_name_in_owner = true
 custom_minimum_size = Vector2(24, 0)
 layout_mode = 2
-tooltip_text = "Close EZ TileMap panel"
+tooltip_text = "Close Tyle panel"
 focus_mode = 0
 icon = ExtResource("17_close")
 flat = true

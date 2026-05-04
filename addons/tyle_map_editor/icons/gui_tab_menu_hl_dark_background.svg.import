@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dt1jbe4kjwi7g"
-path="res://.godot/imported/line.svg-c111f734bf067e0dce9135ef20d50f33.ctex"
+uid="uid://cucf3s03dmrgk"
+path="res://.godot/imported/gui_tab_menu_hl_dark_background.svg-f793900d3343757ef3a1fc097d24c550.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/ez_tile_map_editor/icons/line.svg"
-dest_files=["res://.godot/imported/line.svg-c111f734bf067e0dce9135ef20d50f33.ctex"]
+source_file="res://addons/tyle_map_editor/icons/gui_tab_menu_hl_dark_background.svg"
+dest_files=["res://.godot/imported/gui_tab_menu_hl_dark_background.svg-f793900d3343757ef3a1fc097d24c550.ctex"]
 
 [params]
 

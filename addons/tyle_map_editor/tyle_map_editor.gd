@@ -1,20 +1,20 @@
-class_name EZTileMapEditor
+class_name TyleMapEditor
 extends CanvasLayer
 
 enum ActivationEdge { TOP, BOTTOM, LEFT, RIGHT }
 
 const DEFAULT_INPUT_BINDINGS := {
-	"ez_tile_select": KEY_S,
-	"ez_tile_draw": KEY_D,
-	"ez_tile_line": KEY_L,
-	"ez_tile_rect": KEY_R,
-	"ez_tile_fill": KEY_B,
-	"ez_tile_pick": KEY_P,
-	"ez_tile_erase": KEY_E,
+	"tyle_select": KEY_S,
+	"tyle_draw": KEY_D,
+	"tyle_line": KEY_L,
+	"tyle_rect": KEY_R,
+	"tyle_fill": KEY_B,
+	"tyle_pick": KEY_P,
+	"tyle_erase": KEY_E,
 }
 
-const PANEL_SCENE := preload("res://addons/ez_tile_map_editor/ez_tile_map_editor_panel.tscn")
-const RUNTIME_SETTINGS_PATH := "user://ez_tile_map_editor.cfg"
+const PANEL_SCENE := preload("res://addons/tyle_map_editor/tyle_map_editor_panel.tscn")
+const RUNTIME_SETTINGS_PATH := "user://tyle_map_editor.cfg"
 const RUNTIME_SETTINGS_SECTION := "runtime"
 const RUNTIME_DOCK_EDGE_KEY := "activation_edge"
 const RUNTIME_SELECTED_LAYER_KEY := "selected_layer"
@@ -91,7 +91,7 @@ var _tween: Tween
 
 
 class GameArea extends Control:
-	var host: EZTileMapEditor
+	var host: TyleMapEditor
 
 	func _draw() -> void:
 		if host:
@@ -229,7 +229,7 @@ func _build_nodes() -> void:
 	_game_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	_panel_container = PanelContainer.new()
-	_panel_container.name = "EZTileMapEditorPanelContainer"
+	_panel_container.name = "TyleMapEditorPanelContainer"
 	_panel_container.mouse_filter = Control.MOUSE_FILTER_STOP
 	_panel_container.clip_contents = true
 	_panel_container.z_index = 1
@@ -670,7 +670,7 @@ func _activate_navigation_camera() -> void:
 		return
 	_previous_camera = get_viewport().get_camera_2d()
 	_navigation_camera = Camera2D.new()
-	_navigation_camera.name = "EZTileMapEditorNavigationCamera"
+	_navigation_camera.name = "TyleMapEditorNavigationCamera"
 	if _previous_camera and is_instance_valid(_previous_camera):
 		_navigation_camera.global_transform = _previous_camera.global_transform
 		_navigation_camera.zoom = _previous_camera.zoom

@@ -1,12 +1,14 @@
-# EZ Tile Map Editor
+# Tyle Map Editor
+
+> Y not map faster?
 
 A Godot 4.6 editor plugin that makes terrain painting on TileMapLayer nodes intuitive and easy — pick a terrain, pick a tool, and paint directly in the viewport. Supports 7 paint tools, cell selection with cut/copy/paste (Ctrl+X/C/V), move-drag repositioning, and clipboard paste preview. Replaces the less user-friendly native TileSet bottom panel workflow with a focused, always-visible toolbar and terrain grid.
 
-Plugin entry: `addons/ez_tile_map_editor/plugin.cfg`
-Editor plugin: `addons/ez_tile_map_editor/ez_tile_map_editor_plugin.gd`
-Panel UI: `addons/ez_tile_map_editor/ez_tile_map_editor_panel.tscn`
-Panel logic: `addons/ez_tile_map_editor/ez_tile_map_editor_panel.gd`
-Runtime host: `addons/ez_tile_map_editor/ez_tile_map_editor.gd`
+Plugin entry: `addons/tyle_map_editor/plugin.cfg`
+Editor plugin: `addons/tyle_map_editor/tyle_map_editor_plugin.gd`
+Panel UI: `addons/tyle_map_editor/tyle_map_editor_panel.tscn`
+Panel logic: `addons/tyle_map_editor/tyle_map_editor_panel.gd`
+Runtime host: `addons/tyle_map_editor/tyle_map_editor.gd`
 Project config: `project.godot`
 Demo scene: `main.tscn`
 TileSet resource: `tileset.tres`
