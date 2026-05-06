@@ -10,7 +10,7 @@
         "pull",
         "--prefix=addons/flyout_button",
         "https://github.com/Shilo/flyout-button.git",
-        "main",
+        "addon",
         "--squash"
       ],
       "problemMatcher": []
