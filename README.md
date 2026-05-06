@@ -188,18 +188,34 @@ This project is provided as-is. See `addons/tyle_map_editor/plugin.cfg` for auth
 
 **Created by Shilo · Version 1.0**
 
-## Maintainer: create the addon split branch
+## 🔧 Maintainer: publish the addon branch
 
-The public subtree branch is always named `addon`. After changing files under `addons/tyle_map_editor` on `main`, refresh and push the split branch from the Tyle Map Editor repo root:
+The public subtree branch is always named `addon`. After changing files under `addons/tyle_map_editor` on `main`, the GitHub workflow publishes that directory as the root of `addon` automatically.
+
+To create or repair the branch manually from the Tyle Map Editor repo root, publish the addon directory tree with `git commit-tree`:
 
 ```powershell
-git subtree split --prefix=addons/tyle_map_editor main --branch addon
-git push origin addon
+$addonDir = "addons/tyle_map_editor"
+git fetch origin "+refs/heads/addon:refs/remotes/origin/addon" 2>$null
+$addonTree = git rev-parse "main:$addonDir"
+$currentTree = git rev-parse "origin/addon^{tree}" 2>$null
+
+if ($LASTEXITCODE -eq 0 -and $addonTree -eq $currentTree) {
+  "addon branch already up to date"
+} else {
+  $parent = git rev-parse --verify origin/addon 2>$null
+  if ($LASTEXITCODE -eq 0) {
+    $newCommit = git commit-tree $addonTree -p $parent -m "chore: sync addon branch from $(git rev-parse --short main)"
+  } else {
+    $newCommit = git commit-tree $addonTree -m "chore: sync addon branch from $(git rev-parse --short main)"
+  }
+  git push origin "${newCommit}:refs/heads/addon"
+}
 ```
 
-The `addon` branch contains only the files that belong inside a dependent project's `addons/tyle_map_editor` directory.
+The `addon` branch contains only the files that belong inside a dependent project's `addons/tyle_map_editor` directory. It is a generated one-way publish branch, so make source changes under `addons/tyle_map_editor` on `main` instead of editing `addon` directly.
 
-The `.github/workflows/sync-addon-branch.yml` workflow syncs the `addons/tyle_map_editor` directory to the `addon` branch automatically whenever `main` receives changes under `addons/tyle_map_editor`. Use the manual commands above when creating the branch for the first time, repairing it, or refreshing it outside GitHub Actions.
+The `.github/workflows/sync-addon-branch.yml` workflow uses the same `git commit-tree` publish flow whenever `main` receives changes under `addons/tyle_map_editor`.
 
 ## Using Tyle Map Editor as a subtree dependency
 
@@ -211,7 +227,7 @@ addons/tyle_map_editor
 
 Git subtree is useful here because the dependent repo gets real committed files instead of a submodule pointer. That means the project still opens normally in Godot and does not require an extra clone step.
 
-This repository is a full Godot demo project. The reusable addon files live in `addons/tyle_map_editor`, so subtree consumers should use the generated `addon` split branch.
+This repository is a full Godot demo project. The reusable addon files live in `addons/tyle_map_editor`, so subtree consumers should use the generated `addon` branch.
 
 ### Initialize the subtree
 
