@@ -7,6 +7,7 @@ var _button: Button
 var _overlay: Control
 
 
+const PANEL_SCENE_FILE := "tyle_map_editor_panel.tscn"
 const DEFAULT_INPUT_BINDINGS := {
 	"tyle_select": KEY_S,
 	"tyle_draw": KEY_D,
@@ -19,7 +20,11 @@ const DEFAULT_INPUT_BINDINGS := {
 
 func _enter_tree() -> void:
 	_setup_input_actions()
-	_panel = preload("res://addons/tyle_map_editor/tyle_map_editor_panel.tscn").instantiate()
+	var panel_scene := _load_panel_scene()
+	if panel_scene == null:
+		push_error("TyleMapEditorPlugin: failed to load panel scene from addon directory.")
+		return
+	_panel = panel_scene.instantiate()
 	_panel.plugin = self
 	_button = add_control_to_bottom_panel(_panel, "Tyle")
 	_button.visible = false
@@ -36,6 +41,14 @@ func _enter_tree() -> void:
 		if v:
 			_panel.about_to_be_visible()
 	)
+
+
+func _load_panel_scene() -> PackedScene:
+	var script := get_script() as Script
+	if script == null or script.resource_path.is_empty():
+		return null
+	var scene_path := script.resource_path.get_base_dir().path_join(PANEL_SCENE_FILE)
+	return load(scene_path) as PackedScene
 
 
 func _exit_tree() -> void:

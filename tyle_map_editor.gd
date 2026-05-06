@@ -13,7 +13,7 @@ const DEFAULT_INPUT_BINDINGS := {
 	"tyle_erase": KEY_E,
 }
 
-const PANEL_SCENE := preload("res://addons/tyle_map_editor/tyle_map_editor_panel.tscn")
+const PANEL_SCENE_FILE := "tyle_map_editor_panel.tscn"
 const RUNTIME_SETTINGS_PATH := "user://tyle_map_editor.cfg"
 const RUNTIME_SETTINGS_SECTION := "runtime"
 const RUNTIME_DOCK_EDGE_KEY := "activation_edge"
@@ -243,7 +243,11 @@ func _build_nodes() -> void:
 	_panel_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_panel_container.add_child(_panel_margin)
 
-	_panel = PANEL_SCENE.instantiate()
+	var panel_scene := _load_panel_scene()
+	if panel_scene == null:
+		push_error("TyleMapEditor: failed to load panel scene from addon directory.")
+		return
+	_panel = panel_scene.instantiate()
 	_panel.runtime_mode = true
 	_panel.undo_manager = _undo_redo
 	_panel.layer_provider = Callable(self, "_get_layers_for_panel")
@@ -267,6 +271,14 @@ func _build_nodes() -> void:
 	call_deferred("_sync_panel_size_to_container")
 	call_deferred("_sync_panel_title")
 	call_deferred("_layout_dock")
+
+
+func _load_panel_scene() -> PackedScene:
+	var script := get_script() as Script
+	if script == null or script.resource_path.is_empty():
+		return null
+	var scene_path := script.resource_path.get_base_dir().path_join(PANEL_SCENE_FILE)
+	return load(scene_path) as PackedScene
 
 
 func _layout_dock() -> void:

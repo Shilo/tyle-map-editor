@@ -1,4 +1,4 @@
-extends "res://addons/tyle_map_editor/tyle_map_editor.gd"
+extends TyleMapEditor
 
 # Compatibility wrapper for scenes or editor state that still reference the
 # original runtime host path. The implementation lives in tyle_map_editor.gd.
