@@ -10,6 +10,95 @@ A Godot 4.6 editor plugin that makes **terrain painting** on `TileMapLayer` node
 
 ---
 
+## Maintainer: create the addon split branch
+
+The public subtree branch is always named `addon`. After changing files under `addons/tyle_map_editor` on `main`, refresh and push the split branch from the Tyle Map Editor repo root:
+
+```powershell
+git subtree split --prefix=addons/tyle_map_editor main --branch addon
+git push origin addon
+```
+
+The `addon` branch contains only the files that belong inside a dependent project's `addons/tyle_map_editor` directory.
+
+The `.github/workflows/sync-addon-branch.yml` workflow runs this split automatically whenever `main` receives changes under `addons/tyle_map_editor`. Use the manual commands above when creating the branch for the first time, repairing it, or refreshing it outside GitHub Actions.
+
+## Using Tyle Map Editor as a subtree dependency
+
+Dependent Godot projects should keep these shared files at:
+
+```text
+addons/tyle_map_editor
+```
+
+Git subtree is useful here because the dependent repo gets real committed files instead of a submodule pointer. That means the project still opens normally in Godot and does not require an extra clone step.
+
+This repository is a full Godot demo project. The reusable addon files live in `addons/tyle_map_editor`, so subtree consumers should use the generated `addon` split branch.
+
+### Initialize the subtree
+
+From the root of the repo that depends on Tyle Map Editor:
+
+```powershell
+git subtree add --prefix=addons/tyle_map_editor https://github.com/Shilo/tyle-map-editor.git addon --squash
+```
+
+This adds the shared Tyle Map Editor files into `addons/tyle_map_editor` and records enough subtree history for future updates.
+
+### Update to the latest Tyle Map Editor commit
+
+From the dependent repo root:
+
+```powershell
+git subtree pull --prefix=addons/tyle_map_editor https://github.com/Shilo/tyle-map-editor.git addon --squash
+```
+
+If Git reports conflicts, resolve them like a normal merge, then commit the result.
+
+## VS Code task for updating without typing the CLI command
+
+In any dependent repo, create `.vscode/tasks.json` with this task:
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Update Tyle Map Editor subtree",
+      "type": "shell",
+      "command": "git",
+      "args": [
+        "subtree",
+        "pull",
+        "--prefix=addons/tyle_map_editor",
+        "https://github.com/Shilo/tyle-map-editor.git",
+        "addon",
+        "--squash"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
+```
+
+Then run it from VS Code:
+
+1. Open the Command Palette with `Ctrl+Shift+P`.
+2. Choose `Tasks: Run Task`.
+3. Choose `Update Tyle Map Editor subtree`.
+
+Optional keyboard shortcut in VS Code `keybindings.json`:
+
+```json
+{
+  "key": "ctrl+alt+u",
+  "command": "workbench.action.tasks.runTask",
+  "args": "Update Tyle Map Editor subtree"
+}
+```
+
+The task still runs Git under the hood, but you can trigger it from VS Code without retyping the subtree command.
+
 ## Features
 
 ### Paint Tools
