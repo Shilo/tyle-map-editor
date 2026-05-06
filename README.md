@@ -199,7 +199,7 @@ git push origin addon
 
 The `addon` branch contains only the files that belong inside a dependent project's `addons/tyle_map_editor` directory.
 
-The `.github/workflows/sync-addon-branch.yml` workflow runs this split automatically whenever `main` receives changes under `addons/tyle_map_editor`. Use the manual commands above when creating the branch for the first time, repairing it, or refreshing it outside GitHub Actions.
+The `.github/workflows/sync-addon-branch.yml` workflow syncs the `addons/tyle_map_editor` directory to the `addon` branch automatically whenever `main` receives changes under `addons/tyle_map_editor`. Use the manual commands above when creating the branch for the first time, repairing it, or refreshing it outside GitHub Actions.
 
 ## Using Tyle Map Editor as a subtree dependency
 
@@ -277,7 +277,7 @@ Optional keyboard shortcut in VS Code `keybindings.json`:
 
 The task still runs Git under the hood, but you can trigger it from VS Code without retyping the subtree command.
 
-## Dependencies
+## 📦 Dependencies
 
 - [Flyout Button](https://github.com/Shilo/flyout-button) - vendored as `addons/tyle_map_editor/flyout_button` for compact flyout tool selection.
 - [NeoCade Theme](https://github.com/Shilo/NeoCade-Theme) - vendored as `addons/tyle_map_editor/neocade_theme` for shared editor-facing theme resources.
