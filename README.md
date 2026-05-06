@@ -280,3 +280,4 @@ The task still runs Git under the hood, but you can trigger it from VS Code with
 ## Dependencies
 
 - [Flyout Button](https://github.com/Shilo/flyout-button) - reusable Godot button control used by the editor toolbar for compact flyout tool selection.
+- [NeoCade Theme](https://github.com/Shilo/NeoCade-Theme) - shared Godot UI theme resources used to keep editor-facing controls visually consistent.
